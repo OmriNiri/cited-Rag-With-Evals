@@ -1,0 +1,22 @@
+# Dependencies and build output
+node_modules/
+dist/
+coverage/
+
+# Local environment (secrets, local URLs) — .env.example is committed instead
+.env
+.env.*
+!.env.example
+
+# Downloaded model caches (embedding model is re-downloaded on first run)
+.cache/
+
+# Personal, not part of the public project
+CLAUDE.local.md
+.omri-notes/
+
+# OS / editor noise
+.DS_Store
+.vscode/
+.idea/
+*.log
