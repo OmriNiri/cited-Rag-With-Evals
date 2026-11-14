@@ -1,0 +1,28 @@
+# Local development database: PostgreSQL 16 with the pgvector extension available.
+# Start: docker compose up -d     Stop: docker compose down     Wipe data: docker compose down -v
+
+services:
+  db:
+    # Official pgvector image = Postgres 16 + pgvector preinstalled.
+    # Pinned to an exact pgvector version so every machine and CI runs the same thing.
+    image: pgvector/pgvector:0.8.1-pg16
+    environment:
+      # Local-only credentials. Never reuse these anywhere real.
+      POSTGRES_USER: rag
+      POSTGRES_PASSWORD: rag
+      POSTGRES_DB: rag
+    ports:
+      - '5432:5432'
+    volumes:
+      # Named volume: data survives `docker compose down` (but not `down -v`).
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      # "Container started" is not "database ready": pg_isready reports when
+      # Postgres actually accepts connections. Scripts and CI wait on this.
+      test: ['CMD-SHELL', 'pg_isready -U rag -d rag']
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+volumes:
+  pgdata:
