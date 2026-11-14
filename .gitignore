@@ -20,3 +20,6 @@ CLAUDE.local.md
 .vscode/
 .idea/
 *.log
+
+# TypeScript incremental-build cache
+*.tsbuildinfo
