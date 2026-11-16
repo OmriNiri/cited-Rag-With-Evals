@@ -23,5 +23,10 @@ export interface Chunk {
   text: string; // exact law text (no headings), used for verbatim citation checks
 }
 
+/** A chunk plus its vector, ready to be stored. */
+export interface EmbeddedChunk extends Chunk {
+  embedding: number[];
+}
+
 /** Counts tokens the way the embedding model does. Injected so the chunker stays pure. */
 export type CountTokens = (text: string) => number;

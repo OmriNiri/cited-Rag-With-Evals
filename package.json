@@ -20,6 +20,7 @@
     "format:check": "prettier --check \"src/**/*.ts\" \"scripts/**/*.ts\" \"test/**/*.ts\"",
     "typecheck:scripts": "tsc -p scripts",
     "corpus:build": "node scripts/corpus/build-corpus.ts",
+    "ingest": "npm run build && node dist/cli/ingest.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:cov": "vitest run --coverage"
