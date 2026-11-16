@@ -2,7 +2,9 @@ import { Inject, Module, OnApplicationShutdown } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Pool } from 'pg';
 import { CHUNK_STORE } from '../../ingestion/chunk-store.js';
+import { CHUNK_SEARCH } from '../../retrieval/chunk-search.js';
 import type { Env } from '../config/env.validation.js';
+import { ChunksSearchRepository } from './chunks-search.repository.js';
 import { ChunksRepository } from './chunks.repository.js';
 import { PG_POOL } from './pg-pool.token.js';
 
@@ -20,11 +22,12 @@ import { PG_POOL } from './pg-pool.token.js';
           connectionTimeoutMillis: 2000,
         }),
     },
-    // Business code asks for CHUNK_STORE (interface); this is where it gets bound
-    // to the Postgres implementation.
+    // Business code asks for interfaces (CHUNK_STORE, CHUNK_SEARCH); this is where
+    // they get bound to the Postgres implementations.
     { provide: CHUNK_STORE, useClass: ChunksRepository },
+    { provide: CHUNK_SEARCH, useClass: ChunksSearchRepository },
   ],
-  exports: [PG_POOL, CHUNK_STORE],
+  exports: [PG_POOL, CHUNK_STORE, CHUNK_SEARCH],
 })
 export class DatabaseModule implements OnApplicationShutdown {
   constructor(@Inject(PG_POOL) private readonly pool: Pool) {}
