@@ -1,6 +1,6 @@
 # Architecture
 
-> **Status: Phase 1 built** (Phase 0 + ingestion: chunking, local embeddings, `chunks` table, `npm run ingest`). Each section is updated as its phase is built; anything not built yet is marked _(planned)_.
+> **Status: Phase 2 built** (setup, ingestion, and retrieval: vector, keyword and hybrid search, `npm run search`). Each section is updated as its phase is built; anything not built yet is marked _(planned)_.
 
 ## 1. What the system does
 
@@ -53,9 +53,12 @@ flowchart LR
 | Loader + parser | Read `corpus/*.txt` (not `.md`), split into articles with their heading path | 1 ✅ |
 | Chunker | Pure function: one article per chunk if it fits, else paragraphs → items → sentences, short-paragraph overlap; ≤ 250 model tokens (D7) | 1 ✅ |
 | `Embedder` (interface) + `MiniLmEmbedder` | `countTokens()` with the model's tokenizer; `embed()` → 384-dim unit vectors, batches of 32 | 1 ✅ |
-| `ChunkStore` (interface) + `ChunksRepository` | All SQL for `chunks`; `replaceDocument()` in one transaction (D14) | 1 ✅ |
+| `ChunkStore` (interface) + `ChunksRepository` | Write-side SQL; `replaceDocument()` in one transaction (D14) | 1 ✅ |
 | `IngestionService` + `npm run ingest` | load → parse → chunk → embed → store, per document; prints a report | 1 ✅ |
-| Retrievers | Vector, keyword and hybrid (RRF) search behind one interface | 2 _(planned)_ |
+| `ChunkSearch` (interface) + `ChunksSearchRepository` | Read-side SQL: vector (`<=>`) and keyword (OR + `ts_rank`) queries, optional document filter (D17, D19, D20) | 2 ✅ |
+| `reciprocalRankFusion` | Pure function, ~20 lines: `Σ 1/(60 + rank)`, deterministic ties (D18) | 2 ✅ |
+| `Retriever` (interface) + Vector / Keyword / Hybrid retrievers | Same call for all three; `RETRIEVERS` registry to pick or loop by name | 2 ✅ |
+| `npm run search` | CLI: show one or all three retrievers' top-k for a question | 2 ✅ |
 | Prompt builder | Number the passages and state the answering rules | 3 _(planned)_ |
 | `LlmClient` | Call the model over an OpenAI-compatible HTTP API; retry once | 3 _(planned)_ |
 | Citation validator | Deterministic check that each quote is verbatim in its chunk | 3 _(planned)_ |
@@ -68,7 +71,9 @@ flowchart LR
 src/
   main.ts                          HTTP bootstrap: create app, shutdown hooks, listen on PORT
   app.module.ts                    HTTP root module: config + database + controllers
-  cli/ingest.ts                    `npm run ingest` (Nest without a web server)
+  cli/                             command-line entry points (Nest without a web server)
+    ingest.ts                      `npm run ingest`
+    search.ts                      `npm run search` (+ parse-search-args, format-hits)
   health/health.controller.ts      GET /health
   ingestion/                       BUSINESS LOGIC
     load-documents.ts              corpus/*.txt -> SourceDocument[]
@@ -79,9 +84,16 @@ src/
     embedder.ts, chunk-store.ts    INTERFACES (+ EMBEDDER, CHUNK_STORE tokens)
   infrastructure/                  TALKS TO THE OUTSIDE WORLD
     config/                        env validation, AppConfigModule (shared by HTTP + CLI)
-    database/                      pool, schema.sql, apply-schema, ChunksRepository
+    database/                      pool, schema.sql, apply-schema, ChunksRepository (write),
+                                   ChunksSearchRepository (read)
     embeddings/                    MiniLmEmbedder, EmbeddingsModule
-  retrieval/ answering/            (planned)
+  retrieval/                       BUSINESS LOGIC
+    retriever.ts                   INTERFACE Retriever + RETRIEVERS registry
+    chunk-search.ts                INTERFACE ChunkSearch (+ CHUNK_SEARCH token)
+    vector / keyword / hybrid .retriever.ts
+    rrf.ts                         reciprocal rank fusion
+    retrieval.config.ts            DEFAULT_TOP_K = 5, HYBRID_CANDIDATES = 20 (provisional)
+  answering/                       (planned)
 test/                              integration tests (*.int-spec.ts) + helpers
 scripts/corpus/                    build-corpus.ts -> download / parse-articles / render-text
 corpus/                            co-individual-employment-contract.txt, SOURCES.md
@@ -130,7 +142,18 @@ npm run ingest  (build, then node dist/cli/ingest.js)
 Measured on the current corpus: 91 articles → 99 chunks, largest 234 tokens, ≈2 s after the model is loaded.
 Ingestion is **idempotent**: ids are deterministic (D16) and each document is replaced as a whole (D14), so a re-run leaves exactly the same rows — verified by an integration test.
 
-### 3.2 Answering a question _(planned)_
+### 3.2 Retrieval (built)
+
+```
+retrieve(question, { limit, document? })
+  vector  → embed question with the SAME model as the chunks → ORDER BY embedding <=> q   score = 1 - cosine distance
+  keyword → plainto_tsquery, & replaced by | (OR) → tsv @@ query → ORDER BY ts_rank          score = ts_rank
+  hybrid  → vector + keyword in parallel, max(20, limit) each → RRF Σ 1/(60 + rank) → top limit   score = RRF
+```
+
+Scores are only comparable within one mode. All SQL values are bound parameters. `npm run search -- "<question>" --mode all` prints the three side by side; quality is measured in Phase 4, not judged from single questions (see the observation recorded in D18).
+
+### 3.3 Answering a question _(planned)_
 
 ```
 POST /ask { question }
@@ -146,7 +169,7 @@ POST /ask { question }
 
 Rule: an answer with no valid citation is never returned as a factual answer.
 
-### 3.3 Evaluation _(planned)_
+### 3.4 Evaluation _(planned)_
 
 ```
 eval/questions.jsonl
@@ -186,3 +209,8 @@ Indexes: **HNSW** on `embedding` with `vector_cosine_ops` (must match the `<=>` 
 | Chunk longer than the embedder's input window | Prevented by the 250-token limit (D7); if a single sentence were still too long, ingestion logs a warning ✅ |
 | Ingestion fails halfway (DB error, crash) | Transaction rolls back; previous chunks stay intact; command exits non-zero ✅ |
 | No corpus files found | Ingestion stops with a clear error instead of emptying the table ✅ |
+| Several processes set up the schema at once (fresh database) | Advisory lock makes them take turns (D21) ✅ |
+| Query made only of stop words ("the of and") | Keyword search returns no rows instead of an error ✅ |
+| One retriever finds nothing | Hybrid still returns the other retriever's results ✅ |
+| Casually worded question (vocabulary mismatch) | Known weakness: keyword search degrades, hybrid can be dragged down (D18 observation); measured in Phase 4 |
+| Selective document filter on a large corpus | HNSW filters after the index scan → possibly fewer than k rows (D20); not an issue at 99 chunks |

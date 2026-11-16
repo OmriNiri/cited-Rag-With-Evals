@@ -60,6 +60,7 @@ npm run test:int            # integration tests: real Postgres (temporary schema
 npm run typecheck:scripts   # type-check scripts/ (not part of the Nest build)
 npm run corpus:build        # re-generate corpus/ from the pinned fedlex source
 npm run ingest              # build, then chunk + embed corpus/ into the chunks table (idempotent)
+npm run search -- "<question>" --mode all   # compare vector / keyword / hybrid top-k (--k, --document)
 ```
 
 Update this list whenever a script is added.

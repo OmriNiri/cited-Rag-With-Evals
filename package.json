@@ -21,6 +21,7 @@
     "typecheck:scripts": "tsc -p scripts",
     "corpus:build": "node scripts/corpus/build-corpus.ts",
     "ingest": "npm run build && node dist/cli/ingest.js",
+    "search": "npm run build && node dist/cli/search.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:cov": "vitest run --coverage",

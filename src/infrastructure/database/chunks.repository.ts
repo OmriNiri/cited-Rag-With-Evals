@@ -4,7 +4,7 @@ import type { ChunkStore } from '../../ingestion/chunk-store.js';
 import type { EmbeddedChunk } from '../../ingestion/chunk.types.js';
 import { PG_POOL } from './pg-pool.token.js';
 
-/** All SQL for the chunks table lives here. */
+/** Write-side SQL for the chunks table. Read-side SQL: chunks-search.repository.ts. */
 @Injectable()
 export class ChunksRepository implements ChunkStore {
   constructor(@Inject(PG_POOL) private readonly pool: Pool) {}
