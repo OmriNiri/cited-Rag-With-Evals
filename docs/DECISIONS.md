@@ -170,3 +170,11 @@ One entry per decision: context, options considered, choice, trade-off. New entr
 
 - **Choice:** `WHERE ($2::text IS NULL OR document = $2)`, one query for filtered and unfiltered search, values always passed as parameters (no SQL built from user input).
 - **Trade-off at scale:** with an approximate index (HNSW), Postgres finds the nearest candidates first and filters afterwards, so a selective filter can return fewer than `limit` rows. Irrelevant at 99 chunks; with a large corpus, pgvector's iterative index scans (`hnsw.iterative_scan`) or a partial index per document would be the fix.
+
+## D21 — Schema setup serialised with a Postgres advisory lock
+
+- **Context (found by CI, Phase 2):** on a brand-new database, the integration test files (run in parallel by Vitest) each called `applySchema` at the same moment. `CREATE EXTENSION IF NOT EXISTS` is check-then-create, not atomic: two sessions both saw "missing", both created, and the second failed with `duplicate key value violates unique constraint "pg_extension_name_index"`. Locally it never showed, because the dev database already had the extension. Reproduced 5/5 on a fresh local database before fixing.
+- **Options:** run test files one at a time (`fileParallelism: false`) — hides the bug, slower; create the extension once in a Vitest global setup — fixes only the tests; serialise `applySchema` itself.
+- **Choice:** `applySchema` runs in one transaction that first takes `pg_advisory_xact_lock(<fixed key>)`. Concurrent callers wait their turn; the second one then sees the extension and skips it. The lock is tied to the transaction, so it is released on COMMIT or ROLLBACK and cannot leak.
+- **Why:** fixes the cause, not the symptom — the same race would hit two `npm run ingest` processes started at once on a new database.
+- **Verified:** 5/5 passing runs on a fresh database after the fix (0/5 before).

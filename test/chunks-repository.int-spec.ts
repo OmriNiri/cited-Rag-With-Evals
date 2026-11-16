@@ -25,7 +25,7 @@ describe('ChunksRepository (integration)', () => {
   });
 
   afterEach(async () => {
-    await db.drop();
+    await db?.drop(); // db is undefined if setup failed; do not hide the real error
   });
 
   it('removes chunks that no longer exist when a document gets shorter', async () => {

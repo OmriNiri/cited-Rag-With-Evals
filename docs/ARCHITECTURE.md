@@ -209,6 +209,7 @@ Indexes: **HNSW** on `embedding` with `vector_cosine_ops` (must match the `<=>` 
 | Chunk longer than the embedder's input window | Prevented by the 250-token limit (D7); if a single sentence were still too long, ingestion logs a warning ✅ |
 | Ingestion fails halfway (DB error, crash) | Transaction rolls back; previous chunks stay intact; command exits non-zero ✅ |
 | No corpus files found | Ingestion stops with a clear error instead of emptying the table ✅ |
+| Several processes set up the schema at once (fresh database) | Advisory lock makes them take turns (D21) ✅ |
 | Query made only of stop words ("the of and") | Keyword search returns no rows instead of an error ✅ |
 | One retriever finds nothing | Hybrid still returns the other retriever's results ✅ |
 | Casually worded question (vocabulary mismatch) | Known weakness: keyword search degrades, hybrid can be dragged down (D18 observation); measured in Phase 4 |

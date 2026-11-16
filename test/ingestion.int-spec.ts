@@ -30,7 +30,7 @@ describe('Ingestion pipeline (integration)', () => {
   });
 
   afterAll(async () => {
-    await db.drop();
+    await db?.drop(); // db is undefined if setup failed; do not hide the real error
   });
 
   it('stores every chunk with a 384-dim embedding, within the token limit', async () => {
