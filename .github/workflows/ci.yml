@@ -38,3 +38,38 @@ jobs:
       # Scripts are not part of the Nest build, so they are type-checked separately.
       - run: npm run typecheck:scripts
       - run: npm test
+
+  # Separate job: needs a real database, runs in parallel with `check`.
+  integration:
+    runs-on: ubuntu-latest
+    services:
+      # Same pinned image as docker-compose.yml, so CI tests what developers run.
+      postgres:
+        image: pgvector/pgvector:0.8.1-pg16
+        env:
+          POSTGRES_USER: rag
+          POSTGRES_PASSWORD: rag
+          POSTGRES_DB: rag
+        ports:
+          - 5432:5432
+        # GitHub waits for this health check before starting the steps.
+        options: >-
+          --health-cmd "pg_isready -U rag -d rag"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 15
+    env:
+      DATABASE_URL: postgres://rag:rag@localhost:5432/rag
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      # Downloads MiniLM (~90 MB) from Hugging Face on each run, then tests
+      # ingestion end to end against the Postgres service above.
+      - run: npm run test:int

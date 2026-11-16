@@ -23,7 +23,8 @@
     "ingest": "npm run build && node dist/cli/ingest.js",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:cov": "vitest run --coverage"
+    "test:cov": "vitest run --coverage",
+    "test:int": "vitest run --config vitest.config.int.ts"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.3.2",
