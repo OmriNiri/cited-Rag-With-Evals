@@ -1,6 +1,6 @@
 # Architecture
 
-> **Status: draft.** This describes the *intended* design. Each section is updated as its phase is built; anything not built yet is marked _(planned)_.
+> **Status: Phase 0 built** (app skeleton, config, database connection, health check, corpus). Each section is updated as its phase is built; anything not built yet is marked _(planned)_.
 
 ## 1. What the system does
 
@@ -46,6 +46,10 @@ flowchart LR
 
 | Component | Responsibility | Phase |
 |---|---|---|
+| Corpus build script | Download the pinned fedlex HTML, keep Art. 319–343, write `corpus/*.txt` | 0 ✅ |
+| Env validation | Read `.env`, validate once at startup, crash early with all problems listed | 0 ✅ |
+| `DatabaseModule` | One shared `pg` pool (2 s connect timeout), closed on shutdown | 0 ✅ |
+| `GET /health` | `SELECT 1` through the pool: 200 if the database is up, 503 if not | 0 ✅ |
 | Loader | Read `corpus/` files with their source metadata | 1 _(planned)_ |
 | Chunker | Split text by structure (articles), then by size with overlap | 1 _(planned)_ |
 | Embedder | Turn text into 384-number vectors with a local model | 1 _(planned)_ |
@@ -56,6 +60,45 @@ flowchart LR
 | Citation validator | Deterministic check that each quote is verbatim in its chunk | 3 _(planned)_ |
 | Refusal policy | Refuse on low retrieval score or model-reported insufficiency | 3 _(planned)_ |
 | Eval runner | Compute metrics and write results files | 4 _(planned)_ |
+
+### 2.1 Code layout (D10)
+
+```
+src/
+  main.ts                        bootstrap: create app, shutdown hooks, listen on PORT
+  app.module.ts                  wires ConfigModule + DatabaseModule + controllers
+  health/health.controller.ts    GET /health
+  infrastructure/
+    config/env.validation.ts     typed, validated env
+    database/database.module.ts  PG_POOL provider
+  ingestion/ retrieval/ answering/   (planned) business logic by feature
+scripts/corpus/                  build-corpus.ts -> download / parse-articles / render-text
+corpus/                          co-individual-employment-contract.txt, SOURCES.md
+```
+
+Rule: business code depends on interfaces; `infrastructure/` implements them; Nest's dependency injection connects them (e.g. `HealthController` asks for the `PG_POOL` token and never creates a pool itself).
+
+### 2.2 Startup sequence (built)
+
+```
+main.ts → NestFactory.create(AppModule)
+  → ConfigModule loads .env → validateEnv() → throws listing every invalid variable
+  → DatabaseModule builds one pg Pool from DATABASE_URL
+  → HealthController receives the pool via @Inject(PG_POOL)
+  → app.listen(PORT)
+SIGTERM / Ctrl+C → enableShutdownHooks → DatabaseModule.onApplicationShutdown → pool.end()
+```
+
+### 2.3 Corpus format (built)
+
+```
+## G. End of the employment relationship > II. Open-ended employment relationship > 2. Notice periods > c. After the probation period
+### Art. 335c
+1 The employment relationship may be terminated at one month's notice ...
+2 These notice periods may be varied ...
+```
+
+`##` = heading path (becomes the chunk's `section`), `###` = one article (natural chunk boundary), numbered lines = paragraphs, indented lines = list items. Provenance and reuse terms: `corpus/SOURCES.md`.
 
 ## 3. Data flows
 
@@ -118,6 +161,8 @@ Final column choices will be confirmed in Phase 1.
 
 | Failure | Handling |
 |---|---|
+| Missing / invalid env variable | App refuses to start; error lists every problem ✅ |
+| Database unreachable | Pool gives up after 2 s; `/health` returns 503 instead of hanging ✅ |
 | Model unreachable / timeout | Retry once, then a clear error response _(planned)_ |
 | Malformed JSON from the model | Retry once, then a clear error response _(planned)_ |
 | Quote not found in cited chunk | Citation marked invalid in the response _(planned)_ |
