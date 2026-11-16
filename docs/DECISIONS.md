@@ -8,9 +8,10 @@ One entry per decision: context, options considered, choice, trade-off. New entr
 
 - **Context:** a small (10–25 pages), public, legally reusable document set with clear structure.
 - **Options:** (a) Swiss employment-contract law; (b) Swiss residence/permit guidance; (c) open-source tool documentation.
-- **Choice:** (a) Code of Obligations Art. 319–362 (the employment-contract title), English version from fedlex.admin.ch, optionally plus short official guidance pages.
-- **Why:** numbered articles give a natural chunk boundary and precise gold references for evaluation ("Art. 335c"). Official Swiss enactments are not protected by copyright (Art. 5 Copyright Act).
-- **Trade-off:** the English text is an unofficial translation; only the German, French and Italian versions are legally binding. This is noted in `corpus/SOURCES.md` and the README. The project is a demonstration, not legal advice.
+- **Choice:** (a), narrowed in Phase 0 to **Section One: The Individual Employment Contract, Art. 319–343** (English, consolidated version of 2026-10-01).
+- **Why:** numbered articles give a natural chunk boundary and precise gold references for evaluation ("Art. 335c"). Official Swiss enactments *and their official translations* are not protected by copyright (Art. 5 para. 1 a and para. 2 Copyright Act, verified on fedlex).
+- **Why only Section One (measured):** the whole title is 140 articles, ≈37 pages, above the 10–25 page target. Section One alone is ≈25 pages and holds the core topics (salary, holidays, sick pay, notice, dismissal). The dropped Art. 361–362 are mostly lists of article numbers, which would add noise to keyword search.
+- **Trade-off:** the English text has no legal force; only the German, French and Italian versions are binding. Noted in `corpus/SOURCES.md` and the README. The project is a demonstration, not legal advice.
 
 ## D2 — Runtime: Node.js 24 LTS
 
@@ -46,7 +47,7 @@ One entry per decision: context, options considered, choice, trade-off. New entr
 - **Why:** pgvector operators (`<=>`) and full-text search (`tsvector`, `ts_rank`) are the core of the project and are clearest in plain SQL. ORMs support the `vector` type poorly and would hide the queries that need explaining.
 - **Trade-off:** no generated types or migration tooling; schema is a small SQL file, and query results are typed by hand.
 
-## D6 — Test runner: Jest
+## D6 — Test runner: Jest _(superseded by D8)_
 
 - **Options:** Jest, Vitest.
 - **Choice:** Jest, NestJS's default.
@@ -57,3 +58,35 @@ One entry per decision: context, options considered, choice, trade-off. New entr
 
 - **Context:** the original plan suggested 300–500 tokens per chunk, but the embedder (D3) only reads about 256 tokens.
 - **Direction:** split by article first; keep chunks under the embedder's window (≈200–250 tokens) with a small overlap, so no text is silently ignored when embedding. To be confirmed with real article-length statistics in Phase 1.
+- **First measurement (Phase 0, corpus script):** median article ≈110 words (≈150 tokens), so most articles fit in one chunk; only a handful of long articles (e.g. Art. 336c, Art. 329b) need splitting.
+
+## D8 — Test runner: Vitest (supersedes D6)
+
+- **Context:** D6 chose Jest because it was NestJS's default. Scaffolding showed that NestJS 12 is ESM-only and now generates Vitest by default.
+- **Options:** keep Jest (needs experimental Node flags and extra config to run ESM); switch to Vitest.
+- **Choice:** Vitest.
+- **Why:** framework default again, native ESM, no extra config. API (`describe`/`it`/`expect`) is almost identical to Jest's, mocks are `vi.fn()`.
+- **Trade-off:** slightly less widespread than Jest in older Nest codebases.
+
+## D9 — Linter: oxlint (with Prettier for formatting)
+
+- **Context:** the original plan said ESLint + Prettier; NestJS 12 scaffolds oxlint.
+- **Options:** ESLint; oxlint.
+- **Choice:** oxlint in type-aware mode, as generated, plus Prettier. CI runs `format:check` (verify only, never rewrites).
+- **Why:** framework default, already configured, much faster, and includes the type-aware rules that matter here (e.g. `no-floating-promises`).
+- **Trade-off:** ESLint is better known and has more plugins; none are needed for this project.
+
+## D10 — Code layout: features for business logic, `infrastructure/` for the outside world
+
+- **Context:** keep business rules separate from databases, models and config.
+- **Options:** flat Nest feature folders only; full clean architecture (domain / application / infrastructure / presentation layers with mappers); a light ports-and-adapters split.
+- **Choice:** feature folders (`ingestion/`, `retrieval/`, `answering/`) for business logic, one `src/infrastructure/` folder (config, database, embeddings, LLM client) for code that talks to external systems. Business code depends on interfaces; infrastructure implements them; Nest's dependency injection connects them. `docker-compose.yml` stays at the repo root so `docker compose up` works without `-f`.
+- **Why:** pure logic (chunker, RRF, citation validator, metrics) is unit-testable without a database or model, and swapping Ollama or the embedder only touches `infrastructure/`.
+- **Trade-off:** one extra folder level; full clean architecture would be over-engineering at ~15 files.
+
+## D11 — Corpus is generated by a committed script from a pinned source
+
+- **Options:** convert once by hand and commit only the text; commit a script that downloads and converts.
+- **Choice:** `scripts/corpus/` (download → parse → render, one file each), pinned to one fedlex file URL and version date. The generated text is also committed, so the project still runs offline.
+- **Why:** anyone can verify that the corpus matches the official source, and updating to a new law version is one config change plus a re-run.
+- **Trade-off:** one dev dependency (`cheerio`, HTML parsing) and a parser tied to fedlex's HTML structure. If that structure changes, only `parse-articles.ts` needs updating.

@@ -1,0 +1,14 @@
+// Type-checking settings for standalone scripts (not part of the Nest build).
+// Scripts run directly with `node file.ts`: Node 24 strips the types itself,
+// so imports must use the real ".ts" extension and only erasable syntax is allowed.
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "rootDir": ".",
+    "types": ["node"]
+  },
+  "include": ["**/*.ts"]
+}
