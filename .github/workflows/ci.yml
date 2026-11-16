@@ -35,4 +35,6 @@ jobs:
       - run: npm run lint
       - run: npm run format:check
       - run: npm run build
+      # Scripts are not part of the Nest build, so they are type-checked separately.
+      - run: npm run typecheck:scripts
       - run: npm test
