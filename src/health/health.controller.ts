@@ -5,7 +5,7 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { Pool } from 'pg';
-import { PG_POOL } from '../infrastructure/database/database.module.js';
+import { PG_POOL } from '../infrastructure/database/pg-pool.token.js';
 
 // GET /health — proves the whole chain works: HTTP -> Nest -> pool -> Postgres.
 // It uses the pool directly because checking infrastructure is its only job.

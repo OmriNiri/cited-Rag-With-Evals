@@ -18,7 +18,7 @@ Read all three before changing code.
 - PostgreSQL 16 + pgvector, full-text search via `tsvector` — accessed with `pg` and raw SQL (no ORM)
 - Embeddings: local `Xenova/all-MiniLM-L6-v2` via `@huggingface/transformers`
 - LLM: local model via Ollama, accessed through an OpenAI-compatible HTTP client (`LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL`)
-- Tests: Vitest; integration tests use a real PostgreSQL (Docker)
+- Tests: Vitest. Unit tests: `src/**/*.spec.ts`. Integration tests: `test/**/*.int-spec.ts`, real PostgreSQL in a temporary schema
 - Lint: oxlint (type-aware). Format: Prettier
 
 ### ESM rules (NestJS 12 is ESM-only)
@@ -31,11 +31,14 @@ Read all three before changing code.
 
 ```
 src/
-  <feature>/            business logic by feature (ingestion/, retrieval/, answering/)
+  <feature>/            business logic by feature (ingestion/, retrieval/, answering/) + its interfaces
+  cli/                  command-line entry points (Nest application context, no HTTP)
   health/               GET /health
   infrastructure/       everything that talks to the outside world
     config/             env validation
-    database/           pg pool, repositories, schema
+    database/           pg pool, repositories, schema.sql
+    embeddings/         local embedding model
+test/                   integration tests + test helpers (not in the production build)
 scripts/corpus/         reproducible corpus build (download -> parse -> render)
 corpus/                 generated plain-text corpus + SOURCES.md
 docs/                   ROADMAP, ARCHITECTURE, DECISIONS
@@ -50,11 +53,13 @@ docker compose up -d        # start PostgreSQL + pgvector (wait for "healthy": d
 cp .env.example .env        # first time only
 npm run start:dev           # API on http://localhost:3000 (GET /health)
 npm run build               # compile src/ to dist/
-npm run lint                # oxlint, src/ and scripts/
+npm run lint                # oxlint, src/ scripts/ test/
 npm run format              # prettier --write   (format:check = verify only, used in CI)
-npm test                    # unit tests (vitest)
+npm test                    # unit tests (vitest, no database or model needed)
+npm run test:int            # integration tests: real Postgres (temporary schema) + real model
 npm run typecheck:scripts   # type-check scripts/ (not part of the Nest build)
 npm run corpus:build        # re-generate corpus/ from the pinned fedlex source
+npm run ingest              # build, then chunk + embed corpus/ into the chunks table (idempotent)
 ```
 
 Update this list whenever a script is added.

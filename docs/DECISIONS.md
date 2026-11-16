@@ -27,6 +27,7 @@ One entry per decision: context, options considered, choice, trade-off. New entr
 - **Choice:** local MiniLM.
 - **Why:** free, no key, runs offline and in CI, deterministic.
 - **Trade-off:** lower retrieval quality than large hosted models, and a short input window (≈256 tokens; longer input is silently cut off). This limits chunk size (see D7). Keyword search in the hybrid retriever partly compensates.
+- **Settings (Phase 1):** fp32 weights, mean pooling, normalized to length 1 (how the model was trained; cosine similarity becomes a dot product). Measured: the same text in the same batch gives bit-identical vectors; the same text inside a different batch differs by ≈1e-7 (padding changes floating-point order), which cannot change a ranking. The model (≈90 MB) is downloaded once and cached; it runs on macOS (dev) and Linux (CI).
 
 ## D4 — Answer generation and judging: local open-weight model via Ollama, behind an OpenAI-compatible client
 
@@ -54,11 +55,18 @@ One entry per decision: context, options considered, choice, trade-off. New entr
 - **Why:** works with Nest's testing utilities out of the box; one less thing to configure.
 - **Trade-off:** slower than Vitest; irrelevant at this size.
 
-## D7 — Chunk size _(open — decided in Phase 1)_
+## D7 — Chunk size: structure first, ≤ 250 model tokens per embedding input
 
 - **Context:** the original plan suggested 300–500 tokens per chunk, but the embedder (D3) only reads about 256 tokens.
 - **Direction:** split by article first; keep chunks under the embedder's window (≈200–250 tokens) with a small overlap, so no text is silently ignored when embedding. To be confirmed with real article-length statistics in Phase 1.
 - **First measurement (Phase 0, corpus script):** median article ≈110 words (≈150 tokens), so most articles fit in one chunk; only a handful of long articles (e.g. Art. 336c, Art. 329b) need splitting.
+- **Choice (Phase 1):**
+  1. One article = one chunk whenever it fits; two articles are never merged.
+  2. The limit is **250 tokens for the whole embedding input** (heading path + article number + text), counted with MiniLM's own tokenizer incl. its `[CLS]`/`[SEP]` tokens. Long headings therefore leave less room for text.
+  3. A long article is packed paragraph by paragraph; an oversized paragraph is split into its list items, then sentences; a sentence is never cut.
+  4. Overlap: a new piece starts with the previous paragraph if that is ≤ 60 tokens (typically an intro line such as "Notice of termination is unlawful where given by one party:").
+- **Measured result (real tokenizer):** articles have a median of 126 tokens incl. header, max 496; 6 of 91 exceed the limit (Art. 329b, 331, 331d, 331e, 336, 336c). Result: **99 chunks**, median 131 tokens, max 234, **0 over 256**, so the model never truncates. An earlier estimate (words × 1.3) predicted 9 split articles, which shows why counting with the real tokenizer matters.
+- **Trade-off:** chunks are small (good precision, one topic each), but a question spanning two articles needs both to be retrieved. Revisited in Phase 4 with eval numbers (top-k).
 
 ## D8 — Test runner: Vitest (supersedes D6)
 
@@ -90,3 +98,41 @@ One entry per decision: context, options considered, choice, trade-off. New entr
 - **Choice:** `scripts/corpus/` (download → parse → render, one file each), pinned to one fedlex file URL and version date. The generated text is also committed, so the project still runs offline.
 - **Why:** anyone can verify that the corpus matches the official source, and updating to a new law version is one config change plus a re-run.
 - **Trade-off:** one dev dependency (`cheerio`, HTML parsing) and a parser tied to fedlex's HTML structure. If that structure changes, only `parse-articles.ts` needs updating.
+
+## D12 — Schema applied idempotently by the ingest command, no migration tool
+
+- **Context:** the database has one table. It must exist before ingestion, in development, CI and tests.
+- **Options:** a migration tool (versioned up/down migrations); a separate `db:migrate` command; `schema.sql` with `IF NOT EXISTS`, applied automatically.
+- **Choice:** one `schema.sql` (every statement `IF NOT EXISTS`) applied by `npm run ingest` on every run, and by the integration tests inside their own schema. `CREATE EXTENSION vector SCHEMA public` keeps the extension in one place even when tests run in a temporary schema.
+- **Why:** quickstart stays `docker compose up -d` → `npm run ingest`; one table does not justify migration tooling.
+- **Trade-off:** `IF NOT EXISTS` never changes an existing table. After changing a column, local data is reset with `docker compose down -v`. With real users or more tables, versioned migrations would be the first thing to add.
+
+## D13 — Embed and index the heading path with the text; store the bare text
+
+- **Context:** many articles never repeat their topic in their own text (Art. 335c is about notice periods "after the probation period", but its text never says "probation").
+- **Options:** embed only the text; prepend the heading path and article number for search.
+- **Choice:** embedding input and full-text index = `section + article + text`. The `text` column stores only the law text.
+- **Why:** questions phrased like the heading still find the article. Verified in Phase 1: a keyword query "notice period probation" returns Art. 335c, matched through its heading. The bare `text` column is what Phase 3's citation validator compares quotes against, so it must be exactly the law text.
+- **Trade-off:** headings use part of the 250-token budget (D7), so long-headed articles get slightly smaller chunks.
+
+## D14 — Idempotent ingestion = replace each document in one transaction
+
+- **Options:** insert only (duplicates on re-run); upsert by id; delete the document's chunks then insert, in one transaction.
+- **Choice:** `BEGIN → DELETE … WHERE document = $1 → INSERT all → COMMIT`, `ROLLBACK` on any error, on one dedicated pooled connection.
+- **Why:** an upsert never deletes, so chunks that disappear from a shorter or re-chunked document would stay searchable and citable forever. The transaction makes the replacement all-or-nothing: a failure keeps the old data.
+- **Verified by integration tests:** re-run gives identical rows; a shorter document loses its stale chunks; a failure halfway keeps the old rows; the connection goes back to the pool clean. A deliberate mutation (ROLLBACK removed) made two of those tests fail.
+- **Trade-off:** each run rewrites all rows of a document (≈100 rows, ~2 s including embedding). For a large corpus, re-embedding only changed chunks (by content hash) would be the next step.
+
+## D15 — Integration tests run in a temporary Postgres schema
+
+- **Options:** a separate test database; Testcontainers (a fresh container per run); a temporary schema in the existing database.
+- **Choice:** each test file creates `test_<random>`, sets `search_path=test_<random>,public`, applies the schema, and drops it afterwards. CI runs the same tests against a Postgres service with the same pinned image as `docker-compose.yml`.
+- **Why:** real database engine, no change to Docker setup, developer data in `public` never touched, nothing left behind.
+- **Trade-off:** assumes the tests may create schemas in the configured database (true for the local and CI databases).
+
+## D16 — Readable, deterministic chunk ids
+
+- **Options:** random UUIDs; content hashes; `<document>:<article>:<part>`.
+- **Choice:** e.g. `co-individual-employment-contract:art-335c:0`, built from the file name and article number (no hidden abbreviation table).
+- **Why:** re-ingestion produces the same ids, so eval gold references and citations stay valid; the model can copy a readable id more reliably than a hash; a human can see from the id which article was cited.
+- **Trade-off:** ids change if an article is re-split into a different number of parts; gold references in Phase 4 therefore point at the article, not the part.

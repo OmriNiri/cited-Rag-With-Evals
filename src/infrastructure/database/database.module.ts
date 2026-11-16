@@ -1,11 +1,10 @@
 import { Inject, Module, OnApplicationShutdown } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Pool } from 'pg';
+import { CHUNK_STORE } from '../../ingestion/chunk-store.js';
 import type { Env } from '../config/env.validation.js';
-
-// Injection token for the shared pool. A Symbol (not the Pool class) is used so
-// consumers ask for "the app's pool" explicitly: @Inject(PG_POOL).
-export const PG_POOL = Symbol('PG_POOL');
+import { ChunksRepository } from './chunks.repository.js';
+import { PG_POOL } from './pg-pool.token.js';
 
 @Module({
   providers: [
@@ -21,8 +20,11 @@ export const PG_POOL = Symbol('PG_POOL');
           connectionTimeoutMillis: 2000,
         }),
     },
+    // Business code asks for CHUNK_STORE (interface); this is where it gets bound
+    // to the Postgres implementation.
+    { provide: CHUNK_STORE, useClass: ChunksRepository },
   ],
-  exports: [PG_POOL],
+  exports: [PG_POOL, CHUNK_STORE],
 })
 export class DatabaseModule implements OnApplicationShutdown {
   constructor(@Inject(PG_POOL) private readonly pool: Pool) {}
