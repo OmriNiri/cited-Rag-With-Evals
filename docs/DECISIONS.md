@@ -136,3 +136,37 @@ One entry per decision: context, options considered, choice, trade-off. New entr
 - **Choice:** e.g. `co-individual-employment-contract:art-335c:0`, built from the file name and article number (no hidden abbreviation table).
 - **Why:** re-ingestion produces the same ids, so eval gold references and citations stay valid; the model can copy a readable id more reliably than a hash; a human can see from the id which article was cited.
 - **Trade-off:** ids change if an article is re-split into a different number of parts; gold references in Phase 4 therefore point at the article, not the part.
+
+## D17 — Keyword search matches ANY word (OR), ranked by `ts_rank`
+
+- **Context:** Postgres turns a natural-language question into an AND query (`plainto_tsquery` / `websearch_to_tsquery`): every word must appear in the chunk.
+- **Measured (Phase 2):** for "How long is the notice period after the probation period?", AND produced `long & notic & period & probat & period` and matched **0 of 99 chunks**; OR matched 36, which `ts_rank` then orders.
+- **Options:** AND (precise, but natural questions find nothing); OR + ranking; a hand-made stop-word/keyword extraction step.
+- **Choice:** OR — replace `&` by `|` in the `plainto_tsquery` output, rank with `ts_rank`. Stop words are already dropped by the `english` configuration; a stop-word-only query returns no rows instead of an error.
+- **Why:** questions are written by people, not search experts. Chunks matching more and rarer words still rank first.
+- **Trade-off:** common words (e.g. "employer", "employee") match many chunks, so keyword results get noisy for casually phrased questions (see D18 observation). An integration test fails if the query is switched back to AND (verified by mutation).
+
+## D18 — Hybrid retrieval = RRF (k = 60) over the top 20 of vector and keyword search
+
+- **Options:** vector only; keyword only; weighted sum of normalised scores; reciprocal rank fusion.
+- **Choice:** both retrievers run in parallel, each returning `max(20, limit)` candidates; RRF (`Σ 1/(60 + rank)`, ties broken by id) merges them; the top `limit` are returned with the RRF score.
+- **Why RRF:** cosine similarity and `ts_rank` are on unrelated scales; RRF uses only positions, so no score normalisation is needed. k = 60 is the constant from the original paper (Cormack et al., 2009); larger k makes agreement between the lists count more than a single #1 (shown in a unit test).
+- **Why 20 candidates:** a chunk ranked e.g. 12th by one method and 3rd by the other must be in both lists for RRF to reward it.
+- **Trade-off:** RRF gives both lists equal weight, so a noisy list can pull good results down. Candidate depth and the value of hybrid at all are measured in Phase 4.
+- **Early observation — not a measurement (2 hand-picked questions, Phase 2):** for the correct article Art. 336c,
+  - casual wording "Can my employer fire me while I am sick?": vector rank 11, keyword 61, hybrid 23;
+  - legal wording "Can the employer terminate the employment while the employee is ill?": vector 7, keyword **1**, hybrid 3.
+
+  Hypothesis for Phase 4: keyword search is strong when the question uses the law's vocabulary and weak otherwise; hybrid helps only when both lists carry signal. The eval set should therefore contain both casual and legal phrasings.
+
+## D19 — Separate read and write interfaces for the chunks table
+
+- **Options:** one `ChunkRepository` interface with write and search methods; one interface per feature.
+- **Choice:** `ChunkStore` (ingestion, write) and `ChunkSearch` (retrieval, read), implemented by two small classes (`ChunksRepository`, `ChunksSearchRepository`) that share the same pool.
+- **Why:** each feature depends only on what it uses (interface segregation), so fakes in unit tests stay tiny and retrieval cannot write.
+- **Trade-off:** two classes and two tokens instead of one.
+
+## D20 — Document filter as a plain `WHERE` clause
+
+- **Choice:** `WHERE ($2::text IS NULL OR document = $2)`, one query for filtered and unfiltered search, values always passed as parameters (no SQL built from user input).
+- **Trade-off at scale:** with an approximate index (HNSW), Postgres finds the nearest candidates first and filters afterwards, so a selective filter can return fewer than `limit` rows. Irrelevant at 99 chunks; with a large corpus, pgvector's iterative index scans (`hnsw.iterative_scan`) or a partial index per document would be the fix.

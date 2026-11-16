@@ -9,7 +9,7 @@ Status legend: ⬜ not started · 🟨 in progress · ✅ merged
 | Plan | `docs/project-plan` | ✅ |
 | 0 — Setup | `chore/project-setup` | ✅ |
 | 1 — Ingestion | `feat/ingestion` | ✅ |
-| 2 — Retrieval | `feat/retrieval` | ⬜ |
+| 2 — Retrieval | `feat/retrieval` | ✅ |
 | 3 — Answering | `feat/answering` | ⬜ |
 | 4 — Evaluation | `feat/evaluation` | ⬜ |
 | 5 — CI, docs, polish | `chore/ci-docs-polish` | ⬜ |
@@ -56,13 +56,15 @@ Status legend: ⬜ not started · 🟨 in progress · ✅ merged
 
 **Goal:** three retrievers behind one interface.
 
-- Vector-only (cosine distance via pgvector)
-- Keyword-only (Postgres full-text search, `ts_rank`)
-- Hybrid: reciprocal rank fusion (RRF) of the two lists, about 20 commented lines
-- Optional filter on `document`
-- Tests: RRF unit tests with hand-made rankings; retrieval integration test
+- `Retriever` interface + `RETRIEVERS` registry (`vector`, `keyword`, `hybrid`)
+- Vector: question embedded with the same model, cosine distance via pgvector
+- Keyword: Postgres full-text search with OR between words, ranked by `ts_rank` (D17; AND matched 0 of 99 chunks for a natural question)
+- Hybrid: RRF (k = 60) over the top 20 of each, a 20-line pure function (D18)
+- Optional `document` filter (D20); separate read/write interfaces (D19)
+- `npm run search -- "<question>" --mode vector|keyword|hybrid|all`
+- Tests: 7 RRF unit tests with hand-made rankings, hybrid/vector retriever unit tests with fakes, CLI argument tests; 8 search integration tests with hand-made vectors and texts (ranking, exact similarity scores, OR, stemming, heading match, filter, stop-word query)
 
-**Done when:** a CLI command returns the top-k chunks for a question with each retriever.
+**Done when:** a CLI command returns the top-k chunks for a question with each retriever. ✅ Verified on the real corpus. Early observation recorded as a hypothesis for Phase 4 (D18): keyword search is strong with legal wording, weak with casual wording; hybrid helps only when both lists carry signal.
 
 ## Phase 3 — Answering — `feat/answering`
 
@@ -82,7 +84,7 @@ Status legend: ⬜ not started · 🟨 in progress · ✅ merged
 
 **Goal:** measured quality, not assumed quality.
 
-- `eval/questions.jsonl`: 40 questions, 30 answerable (with gold chunk/section) and 10 unanswerable
+- `eval/questions.jsonl`: 40 questions, 30 answerable (with gold article) and 10 unanswerable; mix casual and legal wording (D18 hypothesis)
 - The agent drafts candidates; **Omri verifies every gold reference against the source text**
 - `npm run eval`:
   - Retrieval: hit@5 and MRR for vector vs keyword vs hybrid
