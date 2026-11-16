@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
 
@@ -41,7 +41,7 @@ jobs:
 
   # Separate job: needs a real database, runs in parallel with `check`.
   integration:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     services:
       # Same pinned image as docker-compose.yml, so CI tests what developers run.
       postgres:

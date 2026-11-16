@@ -8,7 +8,7 @@ Status legend: ⬜ not started · 🟨 in progress · ✅ merged
 |---|---|---|
 | Plan | `docs/project-plan` | ✅ |
 | 0 — Setup | `chore/project-setup` | ✅ |
-| 1 — Ingestion | `feat/ingestion` | ⬜ |
+| 1 — Ingestion | `feat/ingestion` | ✅ |
 | 2 — Retrieval | `feat/retrieval` | ⬜ |
 | 3 — Answering | `feat/answering` | ⬜ |
 | 4 — Evaluation | `feat/evaluation` | ⬜ |
@@ -42,14 +42,15 @@ Status legend: ⬜ not started · 🟨 in progress · ✅ merged
 
 **Goal:** the corpus is chunked, embedded and stored in PostgreSQL.
 
-- Loader: reads `corpus/*.txt` / `*.md` with source metadata
-- Chunker: split by structure (articles/headings) first, then by size with a small overlap; each chunk keeps `document`, `section`, `position`
-- Embedder: local `Xenova/all-MiniLM-L6-v2` (384 dimensions)
-- `chunks` table with an HNSW index (vector) and a GIN index (full text)
-- Idempotent: re-running ingestion does not duplicate rows
-- Tests: chunker unit tests (boundaries, overlap, metadata); ingestion integration test against real Postgres (and a Postgres service in CI)
+- Loader + parser: `corpus/*.txt` (SOURCES.md excluded) → articles with their heading path
+- Chunker (pure function): one article per chunk when it fits; long articles split at paragraphs → list items → sentences with short-paragraph overlap; ≤ 250 tokens of the real model tokenizer (D7). Each chunk keeps `document`, `section`, `article`, `position`
+- Embedder: `Embedder` interface + local `Xenova/all-MiniLM-L6-v2` (384 dims), embedding `section + article + text` (D13)
+- `chunks` table (`schema.sql`, idempotent) with HNSW (vector) and GIN (full text) indexes
+- Idempotent: each document replaced in one transaction (D14); readable deterministic ids (D16)
+- `npm run ingest` CLI (Nest without a web server)
+- Tests: 24 unit tests (parser, splitter, chunker, ids, loader); 6 integration tests against real Postgres in a temporary schema (D15): full pipeline, run-twice idempotency, shrinking document, rollback, clean connection after failure. CI runs them with a Postgres service.
 
-**Done when:** `npm run ingest` fills the table, running it twice gives the same row count, and the tests pass.
+**Done when:** `npm run ingest` fills the table, running it twice gives the same row count, and the tests pass. ✅ Verified: 91 articles → 99 chunks (max 234 tokens), identical rows after a second run, unit + integration tests green locally and in CI.
 
 ## Phase 2 — Retrieval — `feat/retrieval`
 

@@ -1,6 +1,6 @@
 # Architecture
 
-> **Status: Phase 0 built** (app skeleton, config, database connection, health check, corpus). Each section is updated as its phase is built; anything not built yet is marked _(planned)_.
+> **Status: Phase 1 built** (Phase 0 + ingestion: chunking, local embeddings, `chunks` table, `npm run ingest`). Each section is updated as its phase is built; anything not built yet is marked _(planned)_.
 
 ## 1. What the system does
 
@@ -50,10 +50,11 @@ flowchart LR
 | Env validation | Read `.env`, validate once at startup, crash early with all problems listed | 0 ✅ |
 | `DatabaseModule` | One shared `pg` pool (2 s connect timeout), closed on shutdown | 0 ✅ |
 | `GET /health` | `SELECT 1` through the pool: 200 if the database is up, 503 if not | 0 ✅ |
-| Loader | Read `corpus/` files with their source metadata | 1 _(planned)_ |
-| Chunker | Split text by structure (articles), then by size with overlap | 1 _(planned)_ |
-| Embedder | Turn text into 384-number vectors with a local model | 1 _(planned)_ |
-| Chunks repository | All SQL for the `chunks` table | 1 _(planned)_ |
+| Loader + parser | Read `corpus/*.txt` (not `.md`), split into articles with their heading path | 1 ✅ |
+| Chunker | Pure function: one article per chunk if it fits, else paragraphs → items → sentences, short-paragraph overlap; ≤ 250 model tokens (D7) | 1 ✅ |
+| `Embedder` (interface) + `MiniLmEmbedder` | `countTokens()` with the model's tokenizer; `embed()` → 384-dim unit vectors, batches of 32 | 1 ✅ |
+| `ChunkStore` (interface) + `ChunksRepository` | All SQL for `chunks`; `replaceDocument()` in one transaction (D14) | 1 ✅ |
+| `IngestionService` + `npm run ingest` | load → parse → chunk → embed → store, per document; prints a report | 1 ✅ |
 | Retrievers | Vector, keyword and hybrid (RRF) search behind one interface | 2 _(planned)_ |
 | Prompt builder | Number the passages and state the answering rules | 3 _(planned)_ |
 | `LlmClient` | Call the model over an OpenAI-compatible HTTP API; retry once | 3 _(planned)_ |
@@ -65,18 +66,28 @@ flowchart LR
 
 ```
 src/
-  main.ts                        bootstrap: create app, shutdown hooks, listen on PORT
-  app.module.ts                  wires ConfigModule + DatabaseModule + controllers
-  health/health.controller.ts    GET /health
-  infrastructure/
-    config/env.validation.ts     typed, validated env
-    database/database.module.ts  PG_POOL provider
-  ingestion/ retrieval/ answering/   (planned) business logic by feature
-scripts/corpus/                  build-corpus.ts -> download / parse-articles / render-text
-corpus/                          co-individual-employment-contract.txt, SOURCES.md
+  main.ts                          HTTP bootstrap: create app, shutdown hooks, listen on PORT
+  app.module.ts                    HTTP root module: config + database + controllers
+  cli/ingest.ts                    `npm run ingest` (Nest without a web server)
+  health/health.controller.ts      GET /health
+  ingestion/                       BUSINESS LOGIC
+    load-documents.ts              corpus/*.txt -> SourceDocument[]
+    parse-corpus-text.ts           text -> ParsedArticle[]
+    chunker.ts                     articles -> Chunk[]  (+ split-oversized, chunk-id, embedding-text)
+    embed-chunks.ts                batches of 32 -> EmbeddedChunk[]
+    ingestion.service.ts           the pipeline
+    embedder.ts, chunk-store.ts    INTERFACES (+ EMBEDDER, CHUNK_STORE tokens)
+  infrastructure/                  TALKS TO THE OUTSIDE WORLD
+    config/                        env validation, AppConfigModule (shared by HTTP + CLI)
+    database/                      pool, schema.sql, apply-schema, ChunksRepository
+    embeddings/                    MiniLmEmbedder, EmbeddingsModule
+  retrieval/ answering/            (planned)
+test/                              integration tests (*.int-spec.ts) + helpers
+scripts/corpus/                    build-corpus.ts -> download / parse-articles / render-text
+corpus/                            co-individual-employment-contract.txt, SOURCES.md
 ```
 
-Rule: business code depends on interfaces; `infrastructure/` implements them; Nest's dependency injection connects them (e.g. `HealthController` asks for the `PG_POOL` token and never creates a pool itself).
+Rule: business code depends on interfaces; `infrastructure/` implements them; Nest's dependency injection connects them. Example: `IngestionService` asks for `EMBEDDER` and `CHUNK_STORE`; `EmbeddingsModule` binds `EMBEDDER` to `MiniLmEmbedder`, `DatabaseModule` binds `CHUNK_STORE` to `ChunksRepository`. Unit tests use the business code with fakes (e.g. a word counter instead of the tokenizer).
 
 ### 2.2 Startup sequence (built)
 
@@ -102,13 +113,22 @@ SIGTERM / Ctrl+C → enableShutdownHooks → DatabaseModule.onApplicationShutdow
 
 ## 3. Data flows
 
-### 3.1 Ingestion _(planned)_
+### 3.1 Ingestion (built)
 
 ```
-corpus/*.txt → Loader → Chunker → Embedder → upsert into chunks
+npm run ingest  (build, then node dist/cli/ingest.js)
+  → Nest application context (DI, no web server), MiniLM loaded once at startup
+  → applySchema()                       table + indexes, IF NOT EXISTS (D12)
+  → for each corpus/*.txt:
+      parseCorpusText → chunkDocument(countTokens = MiniLM tokenizer)
+      → embedChunks: embed "section + article + text" (D13), batches of 32
+      → ChunksRepository.replaceDocument:
+          BEGIN → DELETE document's chunks → INSERT all → COMMIT   (ROLLBACK on error)
+  → report table (articles, chunks, largest chunk in tokens) → close pool
 ```
 
-Ingestion is **idempotent**: each chunk's id is derived from its content and position, so re-running updates rows instead of duplicating them.
+Measured on the current corpus: 91 articles → 99 chunks, largest 234 tokens, ≈2 s after the model is loaded.
+Ingestion is **idempotent**: ids are deterministic (D16) and each document is replaced as a whole (D14), so a re-run leaves exactly the same rows — verified by an integration test.
 
 ### 3.2 Answering a question _(planned)_
 
@@ -136,26 +156,22 @@ eval/questions.jsonl
   → eval/results/*.json + summary table
 ```
 
-## 4. Database schema _(planned)_
+## 4. Database schema (built)
 
-```sql
-CREATE EXTENSION IF NOT EXISTS vector;
+Source of truth: `src/infrastructure/database/schema.sql` (commented line by line).
 
-CREATE TABLE chunks (
-  id         TEXT PRIMARY KEY,        -- deterministic, enables idempotent re-ingestion
-  document   TEXT NOT NULL,           -- source file
-  section    TEXT,                    -- e.g. "Art. 335c"
-  position   INT  NOT NULL,           -- order within the document
-  text       TEXT NOT NULL,
-  embedding  vector(384) NOT NULL,
-  tsv        tsvector GENERATED ALWAYS AS (to_tsvector('english', text)) STORED
-);
+| Column | Type | Example / purpose |
+|---|---|---|
+| `id` | `TEXT` PK | `co-individual-employment-contract:art-335c:0` (D16) |
+| `document` | `TEXT` | file name without extension |
+| `section` | `TEXT` | heading path, `G. End of … > 2. Notice periods > c. After the probation period` |
+| `article` | `TEXT` | `Art. 335c` |
+| `position` | `INT` | order in the document; `UNIQUE (document, position)` |
+| `text` | `TEXT` | exact law text — citations are validated against it |
+| `embedding` | `vector(384)` | MiniLM vector of `section + article + text` |
+| `tsv` | `tsvector`, generated | `to_tsvector('english', section ‖ article ‖ text)`, kept in sync by Postgres |
 
-CREATE INDEX chunks_embedding_hnsw ON chunks USING hnsw (embedding vector_cosine_ops);
-CREATE INDEX chunks_tsv_gin        ON chunks USING gin (tsv);
-```
-
-Final column choices will be confirmed in Phase 1.
+Indexes: **HNSW** on `embedding` with `vector_cosine_ops` (must match the `<=>` operator used in queries, or it is ignored), **GIN** on `tsv` (word → rows). The `vector` extension is created in `public` so tests can run in their own schema (D15).
 
 ## 5. Failure modes _(to be completed per phase)_
 
@@ -167,4 +183,6 @@ Final column choices will be confirmed in Phase 1.
 | Malformed JSON from the model | Retry once, then a clear error response _(planned)_ |
 | Quote not found in cited chunk | Citation marked invalid in the response _(planned)_ |
 | Question outside the corpus | Refusal via score threshold or model signal _(planned)_ |
-| Chunk longer than the embedder's input window | Avoided by chunk-size limit (see DECISIONS) _(planned)_ |
+| Chunk longer than the embedder's input window | Prevented by the 250-token limit (D7); if a single sentence were still too long, ingestion logs a warning ✅ |
+| Ingestion fails halfway (DB error, crash) | Transaction rolls back; previous chunks stay intact; command exits non-zero ✅ |
+| No corpus files found | Ingestion stops with a clear error instead of emptying the table ✅ |
