@@ -10,8 +10,8 @@ Status legend: ⬜ not started · 🟨 in progress · ✅ merged
 | 0 — Setup | `chore/project-setup` | ✅ |
 | 1 — Ingestion | `feat/ingestion` | ✅ |
 | 2 — Retrieval | `feat/retrieval` | ✅ |
-| 3 — Answering | `feat/answering` | 🟨 |
-| 4 — Evaluation | `feat/evaluation` | ⬜ |
+| 3 — Answering | `feat/answering` | ✅ |
+| 4 — Evaluation | `feat/evaluation` | 🟨 |
 | 5 — CI, docs, polish | `chore/ci-docs-polish` | ⬜ |
 
 ---
