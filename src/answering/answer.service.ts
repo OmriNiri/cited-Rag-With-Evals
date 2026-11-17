@@ -17,7 +17,7 @@ import { validateCitations } from './validate-citations.js';
 /**
  * The answering pipeline. Only connects the pieces, each of which is tested alone:
  *   1. gate 1: best cosine similarity too low -> refuse, no model call
- *   2. retrieval (hybrid by default) -> numbered passages -> model (one retry)
+ *   2. retrieval (vector by default, D28) -> numbered passages -> model (one retry)
  *   3. verbatim check of every citation
  *   4. gates 2-3 decide: cited answer or refusal
  * Model errors that survive the retry are thrown (LlmError) for the caller.

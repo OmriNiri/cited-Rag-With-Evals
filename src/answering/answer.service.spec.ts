@@ -8,16 +8,22 @@ import { LlmError } from './llm-error.js';
 
 const NOTICE =
   '1 The employment relationship may be terminated at one month’s notice.';
-const hybridHits: SearchHit[] = [
-  { ...fakeHit('co:art-335c:0'), article: 'Art. 335c', text: NOTICE },
-  {
-    ...fakeHit('co:art-336c:0'),
-    article: 'Art. 336c',
-    text: 'Other text here.',
-  },
-];
+const notice = (score: number): SearchHit => ({
+  ...fakeHit('co:art-335c:0', score),
+  article: 'Art. 335c',
+  text: NOTICE,
+});
+const sickness: SearchHit = {
+  ...fakeHit('co:art-336c:0'),
+  article: 'Art. 336c',
+  text: 'Other text here.',
+};
 
-/** Vector search returns one hit with the given similarity; hybrid returns hybridHits. */
+/**
+ * Vector search (gate 1 and, by default, the passages) returns the notice
+ * chunk with the given similarity; hybrid returns a different ranking, so a
+ * test can tell which retriever supplied the prompt.
+ */
 function setup(topSimilarity: number | null, script: (string | Error)[]) {
   const stub = (hits: SearchHit[]): Retriever & { calls: number } => {
     const r = {
@@ -31,9 +37,9 @@ function setup(topSimilarity: number | null, script: (string | Error)[]) {
     return r;
   };
   const vector = stub(
-    topSimilarity === null ? [] : [fakeHit('v', topSimilarity)],
+    topSimilarity === null ? [] : [notice(topSimilarity), sickness],
   );
-  const hybrid = stub(hybridHits);
+  const hybrid = stub([sickness, notice(0)]);
   const retrievers = { vector, keyword: stub([]), hybrid } as Retrievers;
   const llm = new FakeLlmClient(script);
   return { service: new AnswerService(retrievers, llm), llm, hybrid, vector };
@@ -42,6 +48,8 @@ function setup(topSimilarity: number | null, script: (string | Error)[]) {
 const cited = modelReply('One month.', [
   { passage: 1, quote: 'may be terminated at one month’s notice' },
 ]);
+
+const promptOf = (llm: FakeLlmClient) => llm.requests[0].messages[1].content;
 
 describe('AnswerService', () => {
   it('returns a cited answer whose citation points to the right chunk', async () => {
@@ -53,20 +61,21 @@ describe('AnswerService', () => {
     ]);
   });
 
-  it('puts the hybrid passages and the question into the prompt', async () => {
-    const { service, llm } = setup(0.7, [cited]);
+  it('uses vector passages by default (D28) and puts the question into the prompt', async () => {
+    const { service, llm, hybrid, vector } = setup(0.7, [cited]);
     await service.ask('What is the notice period?');
-    const userMessage = llm.requests[0].messages[1].content;
-    expect(userMessage).toContain(`[1] Art. 335c`);
-    expect(userMessage).toContain('Question: What is the notice period?');
+    expect(promptOf(llm)).toContain(`[1] Art. 335c`);
+    expect(promptOf(llm)).toContain('Question: What is the notice period?');
+    expect(vector.calls).toBe(2); // gate 1 + passages
+    expect(hybrid.calls).toBe(0);
   });
 
   it('gate 1: refuses a low-similarity question without calling the model', async () => {
-    const { service, llm, hybrid } = setup(MIN_TOP_SIMILARITY - 0.01, [cited]);
+    const { service, llm, vector } = setup(MIN_TOP_SIMILARITY - 0.01, [cited]);
     const result = await service.ask('How do I bake bread?');
     expect(result.refusalReason).toBe('low_retrieval_score');
     expect(llm.requests).toHaveLength(0);
-    expect(hybrid.calls).toBe(0);
+    expect(vector.calls).toBe(1); // gate 1 only, no passage retrieval
   });
 
   it('gate 1: refuses when nothing is indexed at all', async () => {
@@ -98,12 +107,12 @@ describe('AnswerService', () => {
     expect(result.citations[0]).toMatchObject({ invalidReason: 'not_found' });
   });
 
-  it('uses the retriever passed in, e.g. vector for the eval comparison', async () => {
+  it('uses the retriever passed in, e.g. hybrid for the eval comparison', async () => {
     const { service, llm, hybrid, vector } = setup(0.7, [cited]);
-    await service.ask('What is the notice period?', 'vector');
-    expect(hybrid.calls).toBe(0);
-    expect(vector.calls).toBe(2); // gate 1 + passages
-    expect(llm.requests).toHaveLength(1);
+    await service.ask('What is the notice period?', 'hybrid');
+    expect(promptOf(llm)).toContain(`[1] Art. 336c`); // hybrid's ranking
+    expect(hybrid.calls).toBe(1);
+    expect(vector.calls).toBe(1); // gate 1 always uses vector
   });
 
   it('retries a failed model call once, then answers', async () => {
