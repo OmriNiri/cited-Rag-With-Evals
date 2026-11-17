@@ -16,3 +16,7 @@ export const ANSWER_TOP_K = 5;
 // unreachable, 5xx, malformed JSON): the first try + one retry. More retries
 // would mostly make a user wait longer for the same failure.
 export const LLM_ATTEMPTS = 2;
+
+// Longest accepted question. The embedding model reads at most 256 tokens, and a
+// real question is one or two sentences; a cap also limits abuse of the endpoint.
+export const MAX_QUESTION_CHARS = 500;
