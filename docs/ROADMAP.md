@@ -11,8 +11,8 @@ Status legend: ⬜ not started · 🟨 in progress · ✅ merged
 | 1 — Ingestion | `feat/ingestion` | ✅ |
 | 2 — Retrieval | `feat/retrieval` | ✅ |
 | 3 — Answering | `feat/answering` | ✅ |
-| 4 — Evaluation | `feat/evaluation` | 🟨 (built, awaiting merge) |
-| 5 — CI, docs, polish | `chore/ci-docs-polish` | ⬜ |
+| 4 — Evaluation | `feat/evaluation` | ✅ |
+| 5 — CI, docs, polish | `chore/ci-docs-polish` | 🟨 |
 
 ---
 
