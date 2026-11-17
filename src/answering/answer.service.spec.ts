@@ -36,7 +36,7 @@ function setup(topSimilarity: number | null, script: (string | Error)[]) {
   const hybrid = stub(hybridHits);
   const retrievers = { vector, keyword: stub([]), hybrid } as Retrievers;
   const llm = new FakeLlmClient(script);
-  return { service: new AnswerService(retrievers, llm), llm, hybrid };
+  return { service: new AnswerService(retrievers, llm), llm, hybrid, vector };
 }
 
 const cited = modelReply('One month.', [
@@ -96,6 +96,14 @@ describe('AnswerService', () => {
       answer: '',
     });
     expect(result.citations[0]).toMatchObject({ invalidReason: 'not_found' });
+  });
+
+  it('uses the retriever passed in, e.g. vector for the eval comparison', async () => {
+    const { service, llm, hybrid, vector } = setup(0.7, [cited]);
+    await service.ask('What is the notice period?', 'vector');
+    expect(hybrid.calls).toBe(0);
+    expect(vector.calls).toBe(2); // gate 1 + passages
+    expect(llm.requests).toHaveLength(1);
   });
 
   it('retries a failed model call once, then answers', async () => {

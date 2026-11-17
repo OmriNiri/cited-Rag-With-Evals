@@ -1,3 +1,5 @@
+import type { RetrievalMode } from '../retrieval/retriever.js';
+
 // Answering limits. Values marked PROVISIONAL are replaced by eval-tuned ones in Phase 4.
 
 // Quotes shorter than this cannot count as evidence ("the employer" appears everywhere).
@@ -20,3 +22,6 @@ export const LLM_ATTEMPTS = 2;
 // Longest accepted question. The embedding model reads at most 256 tokens, and a
 // real question is one or two sentences; a cap also limits abuse of the endpoint.
 export const MAX_QUESTION_CHARS = 500;
+
+// Retriever that supplies the passages. PROVISIONAL: compared in the Phase 4 eval.
+export const ANSWER_RETRIEVAL_MODE: RetrievalMode = 'hybrid';
