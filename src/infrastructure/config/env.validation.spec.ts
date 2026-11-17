@@ -10,6 +10,10 @@ describe('validateEnv', () => {
     });
   });
 
+  it('passes other variables through unchanged (validated where they are used)', () => {
+    expect(validateEnv({ ...valid, LLM_MODEL: 'm' }).LLM_MODEL).toBe('m');
+  });
+
   it('converts PORT from string to number', () => {
     expect(validateEnv({ ...valid, PORT: '8080' }).PORT).toBe(8080);
   });

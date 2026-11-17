@@ -8,7 +8,13 @@ export interface Env {
   PORT: number;
 }
 
-export function validateEnv(raw: Record<string, unknown>): Env {
+// Checks only the variables every process needs. Other variables (e.g. LLM_*) are
+// passed through unchanged and validated by the module that uses them (D22).
+// Passing them through matters: @nestjs/config keeps ONLY the keys returned here,
+// so returning just { DATABASE_URL, PORT } silently dropped the rest of .env.
+export function validateEnv(
+  raw: Record<string, unknown>,
+): Env & Record<string, unknown> {
   const errors: string[] = [];
 
   const databaseUrl = raw.DATABASE_URL;
@@ -30,5 +36,5 @@ export function validateEnv(raw: Record<string, unknown>): Env {
     );
   }
 
-  return { DATABASE_URL: databaseUrl as string, PORT: port };
+  return { ...raw, DATABASE_URL: databaseUrl as string, PORT: port };
 }
