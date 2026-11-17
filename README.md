@@ -87,6 +87,8 @@ npm run ask -- "How many weeks of holiday do I get?"   # full pipeline in the te
 npm run start:dev                    # API on http://localhost:3000
 ```
 
+Recent npm versions (11.x) may warn that install scripts of `onnxruntime-node`, `protobufjs` and `fsevents` were not run. Nothing in this project needs them: a fresh clone with that warning passed every step above, the unit and integration tests, and reproduced `eval/results/` exactly.
+
 ## API
 
 `POST /ask` with `{"question": "..."}`. A refusal is a normal result (200 with `refused: true` and the reason), not an error. Real responses:
