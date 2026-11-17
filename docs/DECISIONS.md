@@ -159,6 +159,8 @@ One entry per decision: context, options considered, choice, trade-off. New entr
 
   Hypothesis for Phase 4: keyword search is strong when the question uses the law's vocabulary and weak otherwise; hybrid helps only when both lists carry signal. The eval set should therefore contain both casual and legal phrasings.
 
+  **Measured in Phase 4 (D28):** confirmed. On 15 legal questions keyword hit@5 = 15/15; on 15 casual ones 5/15, and it pulls hybrid down to 10/15 against vector's 14/15. RRF is kept as a retriever, but the answering pipeline uses vector.
+
 ## D19 — Separate read and write interfaces for the chunks table
 
 - **Options:** one `ChunkRepository` interface with write and search methods; one interface per feature.
@@ -210,7 +212,7 @@ One entry per decision: context, options considered, choice, trade-off. New entr
 - **Gate 3 — after validation:** no citation survived the verbatim check (D24) → `no_valid_citation`; the rejected citations are still returned so the reason is visible. An answer with at least one valid citation is returned, with any invalid ones flagged.
 - **Threshold data (10 hand-picked questions, Phase 3):** top vector similarity of 5 in-scope questions 0.43 / 0.64 / 0.65 / 0.67 / 0.70; of 5 out-of-scope questions 0.14 / 0.21 / 0.25 / 0.27 / 0.42. The ranges overlap ("How much unemployment insurance will I receive?" = 0.42, "Can my employer fire me while I am sick?" = 0.43), so no threshold separates them perfectly.
 - **Choice:** 0.35 — blocks clearly unrelated questions without a model call, and leaves borderline ones to gates 2–3 (in the model comparison, the 0.42 question was refused by gate 2).
-- **Status:** provisional. Phase 4 chooses the value from the 40-question eval set and records the trade-off (false refusals vs answered out-of-scope questions).
+- **Status:** ~~provisional~~ — settled in Phase 4: 0.35 kept, see D29.
 - **A refusal is a normal result:** `POST /ask` returns 200 with `refused: true` and the reason, not an error status.
 
 ## D26 — Answer model: `llama3.1:8b`
@@ -236,3 +238,79 @@ One entry per decision: context, options considered, choice, trade-off. New entr
 - **After the retry:** `POST /ask` returns **503** ("try again later"); the real reason goes to the server log only, so internal addresses are not shown to clients. Bad input → 400. Any other error (bug, database) → 500.
 - **Why only one retry:** with a local model, a second failure usually means the server is down or the question reliably breaks the model; more retries mostly make the user wait longer (each attempt can take up to `LLM_TIMEOUT_MS`, default 60 s).
 - **Verified:** with `LLM_BASE_URL` pointing at a closed port, `POST /ask` returned 503 and the log showed "Model failed after retry: LLM server unreachable…".
+
+## D28 — The answering pipeline retrieves with vector search, not hybrid
+
+- **Context:** hybrid (D18) was the provisional default. Phase 4 compared all three retrievers on the 40-question set (`eval/questions.jsonl`, gold references checked by Omri and re-checked by the agent, `eval/VERIFICATION.md`).
+- **Retrieval only** (`npm run eval:retrieval`, 30 answerable questions, gold = article level):
+
+  | | hit@1 | hit@5 | hit@5 casual / legal | MRR@10 |
+  |---|---|---|---|---|
+  | vector | 18/30 | **29/30** | **14/15** / 15/15 | **0.754** |
+  | keyword | 15/30 | 20/30 | 5/15 / 15/15 | 0.566 |
+  | hybrid | 16/30 | 25/30 | 10/15 / 15/15 | 0.670 |
+
+- **End to end** (`npm run eval:answers`, llama3.1:8b, top-k 5, threshold 0.35, all 40 questions):
+
+  | | vector | hybrid |
+  |---|---|---|
+  | Refusal accuracy | 37/40 | 37/40 |
+  | Answerable refused | 2 | **1** |
+  | Unanswerable answered | **1** (q40) | 2 (q38, q40) |
+  | Citation validity | 31/33 | **34/35** |
+  | Gold citation (answered answerable) | **26/28** | 24/29 |
+  | Judge: supported / partial / unsupported | 17 / 9 / **3** | 16 / 9 / 6 |
+  | Seconds median / max | 8.9 / 19.6 | **7.5 / 14.7** |
+
+- **Choice:** `ANSWER_RETRIEVAL_MODE = 'vector'`. It finds the right article more often, the difference is entirely on casually worded questions (the people this service is for), and end to end it cites the gold article more often and has fewer judged-unsupported answers.
+- **Why hybrid loses here:** keyword search is noise for casual wording (5/15), and RRF gives the noisy list equal weight, so it pushes vector's good results down (D18 trade-off). With legal wording all three reach 15/15, so there is nothing for hybrid to add.
+- **Trade-offs and caveats:**
+  - The gap is small: on hit@5, 4 questions were found by only one of the two, all by vector. A sign test on 4–0 gives p ≈ 0.125, so this is **not statistically significant** on 30 questions.
+  - Hybrid was faster, refused one fewer answerable question and had slightly higher citation validity; the vector refusals (q02, q17) are model citation errors, not retrieval misses.
+  - Keyword search has the best hit@1 on legal wording (13/15). A weighted RRF or a casual/legal router could get the best of both; not tried, because 30 questions are too few to tune extra weights without overfitting.
+- **Rejected:** keep hybrid (worse on the measured target); keyword only (fails casual questions).
+
+## D29 — Gate-1 threshold stays at 0.35; top-k stays at 5
+
+- **Threshold sweep** (`eval/results/threshold.md`, best vector similarity of each of the 40 questions, no model needed):
+
+  | Threshold | Answerable refused at gate 1 | Unanswerable reaching the model |
+  |---|---|---|
+  | 0.30 | 0/30 | 6/10 |
+  | **0.35** | **0/30** | **5/10** |
+  | 0.40 | 4/30 (all casual: q02, q08, q22, q28) | 3/10 |
+  | 0.45 | 7/30 | 1/10 |
+
+- **Choice:** keep 0.35, the highest value with no false refusal. A gate-1 refusal is final (the model never sees the question), while an unanswerable question that passes still meets gates 2–3. End to end, gates 2–3 refused 4 of the 5 that passed; only q40 was answered.
+- **Failure modes:** the margin is thin — the lowest answerable question scores 0.366 (q28), the highest blocked unanswerable 0.329 (q37). A slightly different casual question could fall under 0.35, and raising the threshold to 0.40 would refuse 4 real casual questions to block 2 more out-of-scope ones. Cosine similarity measures "same topic", not "answered by the text": q40 (salary change without agreement) scores 0.552, higher than most answerable questions, so no threshold could block it.
+- **Top-k = 5:** vector hit@3 = 27/30, hit@5 = 29/30, hit@10 = 30/30; the only question that k = 10 would add is q05 (gold at rank 9). Other k values were **not** run end to end; 5 is kept because it covers 29/30 at half the prompt length of 10 (and prompt length is the main cost of the local model's time per answer).
+- **Caveat:** the threshold was chosen on the same 40 questions it is reported on, so the 0/30 is optimistic for new questions.
+
+## D30 — The LLM judge is an indicator, not the measure of truth
+
+- **Setup:** `llama3.1:8b` (the same model that answers) judges each answered question as supported / partial / unsupported, seeing only the question, the answer and the **valid** quotes, with a fixed rubric and a JSON schema (`src/evaluation/judge/`).
+- **Human check:** 15 of the 29 answered rows of the vector run, picked evenly by id (not by hand), were labelled by Omri on a blind sheet (`eval/JUDGE-CHECK.md`; no judge verdict, retriever or gold shown) with the same rubric. `npm run eval:judge-agreement`:
+  - same verdict **10/15**, Cohen's kappa **0.46** (moderate);
+  - judge kinder than the human on 2 (q08, q14), harsher on 3 (q01, q06, q16).
+- **Judge errors seen:** q16 — read the answer backwards ("states that … is legal"; the answer says it is not legal); q06 — claimed a phrase was missing that quote 2 contains word for word; q01 — marked partial for a claim the answer does not make. Outside the sample, q05 was judged "supported" although the answer is wrong for the question (it cites the duty of care, Art. 328a, not the protection from dismissal, Art. 336c).
+- **Choice:** report the judge numbers, but treat them as a rough signal. Decisions rest first on the deterministic metrics: verbatim citation validity (D24), gold-citation rate, refusal accuracy. The gold-citation rate caught q05; the judge did not.
+- **Limits of the check:** 15 items, so kappa is uncertain; one human labeller; not fully blind — Omri had seen some judge verdicts in a step summary, and the agent reviewed his labels against the rubric before the comparison (6 labels changed). The judge is the same 8B model it is judging.
+- **Rejected:** a bigger hosted judge (costs money and sends data out; possible later as an optional comparison, ROADMAP); dropping the judge (the deterministic checks cannot see "real quote, wrong answer", D26).
+
+## D31 — No re-mapping of a quote found in a different passage
+
+- **Context:** in the vector run, q17 was refused (`no_valid_citation`) because the model quoted real text but gave the wrong passage number. Code could search all shown passages and re-map the citation.
+- **Choice:** don't. The citation check stays "this quote is in the passage you named".
+- **Why:** it would change one of 40 results; a wrong passage number is a real model error that the eval should show, not hide; and the rule stays simple to explain and test. The other vector refusal (q02) stitched two sentences into one quote and fails either way.
+- **Trade-off:** one answerable question refused that could have been answered.
+
+## D32 — How the evaluation is built, and its limits
+
+- **Eval set:** 40 questions — 30 answerable (15 casual, 15 legal wording) with gold articles, 10 unanswerable. Drafted by the agent, every gold reference checked against the law text by Omri and re-checked by the agent; q40 kept unanswerable after review (`eval/VERIFICATION.md`). Includes both known failures from D26 (q05, q40).
+- **Gold is article level:** a hit counts if any chunk of a gold article is retrieved or cited. Simpler to label and check by hand than chunk-level gold; slightly generous for long articles split into several chunks.
+- **Reproducible:** results are written to `eval/results/*.{json,md}` with no timestamps; temperature 0. `--rescore` re-applies a corrected label to the saved answers without calling the model.
+- **Limitations (stated in the README, Phase 5):**
+  - small n: one question is 3.3 points of hit@5; no difference in this phase is statistically significant;
+  - the same set was used to choose the retriever and threshold and to report them — no held-out set;
+  - one corpus (Swiss CO Art. 319–343, English), one answer model, one judge that is the same model;
+  - questions written by the agent, not by real users; "casual" wording is the agent's idea of casual.

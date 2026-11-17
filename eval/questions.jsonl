@@ -1,0 +1,40 @@
+{"id":"q01","question":"What is the notice period after the probation period has ended?","answerable":true,"goldArticles":["Art. 335c"],"wording":"legal"}
+{"id":"q02","question":"I've been at my job for three years. How much notice does my boss have to give me?","answerable":true,"goldArticles":["Art. 335c"],"wording":"casual"}
+{"id":"q03","question":"How much holiday is an employee entitled to per year?","answerable":true,"goldArticles":["Art. 329a"],"wording":"legal"}
+{"id":"q04","question":"How many weeks of vacation do I get?","answerable":true,"goldArticles":["Art. 329a"],"wording":"casual"}
+{"id":"q05","question":"Can my employer fire me while I am sick?","answerable":true,"goldArticles":["Art. 336c"],"wording":"casual","note":"Known faithfulness failure in Phase 3 (D26): retrieval missed Art. 336c, answer cited Art. 328a."}
+{"id":"q06","question":"During which periods may the employer not terminate the employment relationship after the probation period?","answerable":true,"goldArticles":["Art. 336c"],"wording":"legal"}
+{"id":"q07","question":"Is the employee obliged to perform overtime, and how must it be compensated?","answerable":true,"goldArticles":["Art. 321c"],"wording":"legal"}
+{"id":"q08","question":"Can I ask my boss for a letter that only says how long I worked there and what my job was?","answerable":true,"goldArticles":["Art. 330a"],"wording":"casual"}
+{"id":"q09","question":"What must an employment reference contain?","answerable":true,"goldArticles":["Art. 330a"],"wording":"legal"}
+{"id":"q10","question":"How long is the probation period and what notice applies during it?","answerable":true,"goldArticles":["Art. 335b"],"wording":"legal"}
+{"id":"q11","question":"I just started a new job two weeks ago. Can I quit with short notice?","answerable":true,"goldArticles":["Art. 335b"],"wording":"casual"}
+{"id":"q12","question":"Do I still get paid if I can't work because I broke my leg?","answerable":true,"goldArticles":["Art. 324a"],"wording":"casual"}
+{"id":"q13","question":"How long is maternity leave?","answerable":true,"goldArticles":["Art. 329f"],"wording":"legal"}
+{"id":"q14","question":"How much time off does a new dad get when his baby is born?","answerable":true,"goldArticles":["Art. 329g"],"wording":"casual"}
+{"id":"q15","question":"My employer wants me to pay for my own work travel costs. Is that allowed?","answerable":true,"goldArticles":["Art. 327a"],"wording":"casual"}
+{"id":"q16","question":"My boss says I can't take more than one week of vacation at a time. Is that legal?","answerable":true,"goldArticles":["Art. 329c"],"wording":"casual"}
+{"id":"q17","question":"May the holiday entitlement be replaced by a monetary payment during the employment relationship?","answerable":true,"goldArticles":["Art. 329d"],"wording":"legal"}
+{"id":"q18","question":"Who owns an invention I came up with as part of my job?","answerable":true,"goldArticles":["Art. 332"],"wording":"casual"}
+{"id":"q19","question":"What happens to the employment relationship when the employer transfers the company to a third party?","answerable":true,"goldArticles":["Art. 333"],"wording":"legal"}
+{"id":"q20","question":"When is notice of termination unlawful?","answerable":true,"goldArticles":["Art. 336"],"wording":"legal"}
+{"id":"q21","question":"What is the maximum compensation for unlawful termination of the employment relationship?","answerable":true,"goldArticles":["Art. 336a"],"wording":"legal"}
+{"id":"q22","question":"What can I get if my employer fires me on the spot for no good reason?","answerable":true,"goldArticles":["Art. 337c"],"wording":"casual"}
+{"id":"q23","question":"When may the employment relationship be terminated with immediate effect for good cause?","answerable":true,"goldArticles":["Art. 337"],"wording":"legal"}
+{"id":"q24","question":"Under what conditions is a prohibition of competition binding on the employee?","answerable":true,"goldArticles":["Art. 340"],"wording":"legal"}
+{"id":"q25","question":"Can my old employer stop me from working for a competitor for five years?","answerable":true,"goldArticles":["Art. 340a"],"wording":"casual"}
+{"id":"q26","question":"I'm 55 and have worked at the same company for 25 years. Do I get a severance payment when I leave?","answerable":true,"goldArticles":["Art. 339b","Art. 339c"],"wording":"casual"}
+{"id":"q27","question":"Must the employer inform the employee in writing of the essential terms of the employment contract?","answerable":true,"goldArticles":["Art. 330b"],"wording":"legal"}
+{"id":"q28","question":"Do I have to pay for something I broke at work by accident?","answerable":true,"goldArticles":["Art. 321e"],"wording":"casual"}
+{"id":"q29","question":"How many days off can I take to look after my sick partner?","answerable":true,"goldArticles":["Art. 329h"],"wording":"casual"}
+{"id":"q30","question":"What must the employer do to protect employees against sexual harassment?","answerable":true,"goldArticles":["Art. 328"],"wording":"legal"}
+{"id":"q31","question":"What is the capital of Switzerland?","answerable":false,"goldArticles":[],"wording":"casual","note":"out of domain"}
+{"id":"q32","question":"How do I bake sourdough bread?","answerable":false,"goldArticles":[],"wording":"casual","note":"out of domain"}
+{"id":"q33","question":"What is the VAT rate in Switzerland?","answerable":false,"goldArticles":[],"wording":"casual","note":"out of domain"}
+{"id":"q34","question":"What is the retirement age in Switzerland?","answerable":false,"goldArticles":[],"wording":"casual","note":"near miss: social insurance law, not in the corpus"}
+{"id":"q35","question":"How do I apply for a Swiss work permit as a non-EU citizen?","answerable":false,"goldArticles":[],"wording":"casual","note":"near miss: immigration law, not in the corpus"}
+{"id":"q36","question":"How much unemployment insurance will I receive?","answerable":false,"goldArticles":[],"wording":"casual","note":"near miss: unemployment insurance law, not in the corpus"}
+{"id":"q37","question":"What is the minimum wage in Zurich?","answerable":false,"goldArticles":[],"wording":"casual","note":"near miss: Art. 322 mentions salary but sets no amount"}
+{"id":"q38","question":"What is the maximum number of working hours per week?","answerable":false,"goldArticles":[],"wording":"legal","note":"near miss: set by the Labour Act, not the Code of Obligations; Art. 321c covers overtime only"}
+{"id":"q39","question":"How much income tax is deducted from my salary?","answerable":false,"goldArticles":[],"wording":"casual","note":"near miss: tax law, not in the corpus"}
+{"id":"q40","question":"Can an employer change my salary without my agreement?","answerable":false,"goldArticles":[],"wording":"casual","note":"Known faithfulness failure in Phase 3 (D26). Near miss, kept unanswerable after review: Art. 322(1) says the employer must pay the agreed salary, but no article addresses changing a salary; answering from 322 is an inference. Label fixed before relying on any result."}

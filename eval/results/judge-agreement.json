@@ -1,0 +1,111 @@
+{
+  "source": "answers-vector",
+  "agreement": {
+    "labelled": 15,
+    "agree": 10,
+    "kappa": 0.4565217391304347,
+    "lenient": [
+      "q08",
+      "q14"
+    ],
+    "strict": [
+      "q01",
+      "q06",
+      "q16"
+    ],
+    "confusion": {
+      "supported": {
+        "supported": 5,
+        "partial": 2,
+        "unsupported": 1
+      },
+      "partial": {
+        "supported": 1,
+        "partial": 4,
+        "unsupported": 0
+      },
+      "unsupported": {
+        "supported": 0,
+        "partial": 1,
+        "unsupported": 1
+      }
+    }
+  },
+  "pairs": [
+    {
+      "id": "q01",
+      "human": "supported",
+      "judge": "partial"
+    },
+    {
+      "id": "q04",
+      "human": "supported",
+      "judge": "supported"
+    },
+    {
+      "id": "q06",
+      "human": "supported",
+      "judge": "partial"
+    },
+    {
+      "id": "q08",
+      "human": "unsupported",
+      "judge": "partial"
+    },
+    {
+      "id": "q10",
+      "human": "partial",
+      "judge": "partial"
+    },
+    {
+      "id": "q12",
+      "human": "partial",
+      "judge": "partial"
+    },
+    {
+      "id": "q14",
+      "human": "partial",
+      "judge": "supported"
+    },
+    {
+      "id": "q16",
+      "human": "supported",
+      "judge": "unsupported"
+    },
+    {
+      "id": "q19",
+      "human": "supported",
+      "judge": "supported"
+    },
+    {
+      "id": "q21",
+      "human": "supported",
+      "judge": "supported"
+    },
+    {
+      "id": "q23",
+      "human": "supported",
+      "judge": "supported"
+    },
+    {
+      "id": "q25",
+      "human": "partial",
+      "judge": "partial"
+    },
+    {
+      "id": "q27",
+      "human": "unsupported",
+      "judge": "unsupported"
+    },
+    {
+      "id": "q29",
+      "human": "supported",
+      "judge": "supported"
+    },
+    {
+      "id": "q40",
+      "human": "partial",
+      "judge": "partial"
+    }
+  ]
+}

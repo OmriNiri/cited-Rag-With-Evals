@@ -1,6 +1,6 @@
 # Architecture
 
-> **Status: Phase 3 built** (setup, ingestion, retrieval, and answering: `POST /ask` and `npm run ask` with verified citations and refusals). Each section is updated as its phase is built; anything not built yet is marked _(planned)_.
+> **Status: Phase 4 built** (setup, ingestion, retrieval, answering, and evaluation: retrieval and answer metrics on a verified 40-question set, an LLM judge checked against human labels, and the retriever / threshold / top-k chosen from those numbers). Each section is updated as its phase is built; anything not built yet is marked _(planned)_.
 
 ## 1. What the system does
 
@@ -33,7 +33,7 @@ flowchart LR
         R --> P --> M --> V
     end
 
-    subgraph Eval["Evaluation (npm run eval)"]
+    subgraph Eval["Evaluation (npm run eval:*)"]
         Q[eval/questions.jsonl] --> X[Metrics<br/>hit@5, MRR, faithfulness,<br/>citation validity, refusal accuracy]
     end
 
@@ -68,7 +68,11 @@ flowchart LR
 | Refusal policy | Pure: gate 1 (vector similarity < 0.35), gate 2 (model refused), gate 3 (no valid citation) (D25) | 3 ✅ |
 | `AnswerService` | Connects the answering pipeline; used by both the API and the CLI | 3 ✅ |
 | `POST /ask` + `npm run ask` | HTTP endpoint (400 / 200 / 503) and CLI over the same service | 3 ✅ |
-| Eval runner | Compute metrics and write results files | 4 _(planned)_ |
+| Eval set + loader | `eval/questions.jsonl` (40 questions, verified gold articles); parsed with every error listed by line number | 4 ✅ |
+| Retrieval eval + threshold sweep | hit@k and MRR@10 per retriever and per wording; gate-1 refusals at 0.20–0.60 (no model) | 4 ✅ |
+| Answer eval + metrics | Every question through `AnswerService`; refusal 2×2, citation validity, gold-citation rate, time (D28) | 4 ✅ |
+| Faithfulness judge | Same model, fixed rubric, sees only the valid quotes; supported / partial / unsupported (D30) | 4 ✅ |
+| Judge check | Blind sheet of 15 answers for hand labels; agreement + Cohen's kappa against the judge (D30) | 4 ✅ |
 
 ### 2.1 Code layout (D10)
 
@@ -80,6 +84,9 @@ src/
     ingest.ts                      `npm run ingest`
     search.ts                      `npm run search` (+ parse-search-args, format-hits)
     ask.ts                         `npm run ask` (+ parse-ask-args, format-answer)
+    eval-retrieval.ts              `npm run eval:retrieval`
+    eval-answers.ts                `npm run eval:answers` (+ parse-eval-answers-args, --rescore)
+    judge-sheet.ts, judge-agreement.ts   `npm run eval:judge-sheet` / `eval:judge-agreement`
   health/health.controller.ts      GET /health
   ingestion/                       BUSINESS LOGIC
     load-documents.ts              corpus/*.txt -> SourceDocument[]
@@ -99,7 +106,7 @@ src/
     chunk-search.ts                INTERFACE ChunkSearch (+ CHUNK_SEARCH token)
     vector / keyword / hybrid .retriever.ts
     rrf.ts                         reciprocal rank fusion
-    retrieval.config.ts            DEFAULT_TOP_K = 5, HYBRID_CANDIDATES = 20 (provisional)
+    retrieval.config.ts            DEFAULT_TOP_K = 5, HYBRID_CANDIDATES = 20 (not tuned: /ask uses vector, D28)
   answering/                       BUSINESS LOGIC
     llm-client.ts, llm-error.ts    INTERFACE LlmClient (+ LLM_CLIENT token), LlmError(retryable)
     model-answer.ts                what the model must return + its JSON schema
@@ -110,10 +117,21 @@ src/
     refusal-policy.ts              the three gates
     answer.service.ts              the pipeline
     ask.controller.ts, parse-ask-body.ts   POST /ask
-    answering.config.ts            MIN_TOP_SIMILARITY, ANSWER_TOP_K, MIN_QUOTE_WORDS, ... (some provisional)
+    answering.config.ts            MIN_TOP_SIMILARITY 0.35, ANSWER_TOP_K 5, ANSWER_RETRIEVAL_MODE vector (D28, D29)
+  evaluation/                      BUSINESS LOGIC (offline measurement)
+    parse-eval-set.ts, load-eval-set.ts   eval/questions.jsonl -> EvalQuestion[]
+    metrics.ts, retrieval-eval.ts  first gold rank -> hit@k, MRR
+    threshold-sweep.ts             best vector similarity -> refusals per threshold
+    answer-eval.ts, answer-metrics.ts   AnswerService + judge per question -> summary
+    relabel-rows.ts                --rescore: apply corrected labels to saved rows
+    judge/                         judge prompt, verdict schema + parser, FaithfulnessJudge
+    judge-check/                   pick-spread, blind sheet build/parse, agreement (kappa)
+    format-*-report.ts, write-results.ts   markdown + JSON to eval/results/ (no timestamps)
+    evaluation.config.ts           EVAL_DEPTH 10, EVAL_KS, SWEEP_THRESHOLDS, JUDGE_CHECK_SIZE 15
 test/                              integration tests (*.int-spec.ts) + helpers
 scripts/corpus/                    build-corpus.ts -> download / parse-articles / render-text
 corpus/                            co-individual-employment-contract.txt, SOURCES.md
+eval/                              questions.jsonl, VERIFICATION.md, JUDGE-CHECK.md, results/
 ```
 
 Rule: business code depends on interfaces; `infrastructure/` implements them; Nest's dependency injection connects them. Example: `IngestionService` asks for `EMBEDDER` and `CHUNK_STORE`; `EmbeddingsModule` binds `EMBEDDER` to `MiniLmEmbedder`, `DatabaseModule` binds `CHUNK_STORE` to `ChunksRepository`. Unit tests use the business code with fakes (e.g. a word counter instead of the tokenizer).
@@ -179,7 +197,7 @@ POST /ask {"question": "..."}          or   npm run ask -- "<question>"
   → parseAskBody: non-empty string, ≤ 500 chars, trimmed          else 400
   → AnswerService.ask(question)
       vector top 1 → similarity < 0.35?          → refuse low_retrieval_score   (gate 1, no model call)
-      hybrid top 5 → buildPrompt: system rules + [1]..[5] passages + question
+      vector top 5 → buildPrompt: system rules + [1]..[5] passages + question   (D28)
       completeWithRetry (≤ 2 attempts):
           OpenAiCompatibleClient → Ollama (llama3.1:8b, temperature 0, JSON schema)
           parseModelAnswer → { answer, citations: [{ passage, quote }], refused }
@@ -194,17 +212,44 @@ Rule: an answer with no valid citation is never returned as a factual answer. In
 
 Examples (real runs through `AnswerService` with Postgres and llama3.1:8b): "How many weeks of holiday does an employee get per year?" → answered, citing Art. 329a word for word ("…at least four weeks’ holiday and five weeks’ holiday for employees under the age of 20."). "How do I bake sourdough bread?" → refused at gate 1.
 
-**Known limitation:** the verbatim check proves a quote exists, not that it supports the answer — two real examples in D26. Faithfulness is measured in Phase 4.
+**Known limitation:** the verbatim check proves a quote exists, not that it supports the answer — two real examples in D26, both still failing in the Phase 4 eval (q05, q40; see 3.4).
 
-### 3.4 Evaluation _(planned)_
+### 3.4 Evaluation (built)
 
 ```
-eval/questions.jsonl
-  → for each retriever: hit@5, MRR against gold chunks       (no model needed — runs in CI)
-  → full /ask pipeline: citation validity, refusal accuracy,
-    faithfulness via LLM judge                                 (needs local model — run manually)
-  → eval/results/*.json + summary table
+eval/questions.jsonl (40: 30 answerable with gold article, 10 unanswerable; checked in eval/VERIFICATION.md)
+  npm run eval:retrieval                                  (Postgres + embedder, no LLM, seconds)
+    → each retriever, top 10 → rank of first gold article → hit@1/3/5/10, MRR@10, split casual / legal
+    → best vector similarity per question → refusals at thresholds 0.20 … 0.60
+    → eval/results/retrieval.*, threshold.*
+  npm run eval:answers -- --mode vector                   (needs Ollama, minutes)
+    → AnswerService.ask(question, mode) for all 40 → answered / refused / error
+    → FaithfulnessJudge on answered rows (question + answer + valid quotes only)
+    → refusal accuracy, citation validity, gold citation, judge counts, seconds
+    → eval/results/answers-<mode>.*      (--rescore: recompute from saved rows, no model)
+  npm run eval:judge-sheet → eval/JUDGE-CHECK.md (15 rows, blind) → hand labels
+  npm run eval:judge-agreement → eval/results/judge-agreement.* (agreement, Cohen's kappa)
 ```
+
+Results files have no timestamps, so a rerun that changes nothing gives an empty diff.
+
+**Results** (real runs, `eval/results/`):
+
+| Retrieval (30 answerable) | vector | keyword | hybrid |
+|---|---|---|---|
+| hit@5 | **29/30** | 20/30 | 25/30 |
+| hit@5 casual / legal | **14/15** / 15/15 | 5/15 / 15/15 | 10/15 / 15/15 |
+| MRR@10 | **0.754** | 0.566 | 0.670 |
+
+| End to end (llama3.1:8b, top 5, threshold 0.35) | vector ← chosen | hybrid |
+|---|---|---|
+| Refusal accuracy (40) | 37/40 | 37/40 |
+| Citation validity | 31/33 | 34/35 |
+| Gold citation | 26/28 | 24/29 |
+| Judge supported / partial / unsupported | 17 / 9 / 3 | 16 / 9 / 6 |
+| Seconds median / max | 8.9 / 19.6 | 7.5 / 14.7 |
+
+Judge vs human on 15 answers: 10/15 same verdict, Cohen's kappa 0.46 (D30). Choices and caveats: D28 (vector), D29 (threshold 0.35, top-k 5), D30 (judge), D31 (no quote re-mapping), D32 (method and limits).
 
 ## 4. Database schema (built)
 
@@ -234,14 +279,15 @@ Indexes: **HNSW** on `embedding` with `vector_cosine_ops` (must match the `<=>` 
 | Malformed JSON from the model | Retry once, then 503 ✅ |
 | `LLM_MODEL` / `LLM_BASE_URL` missing or invalid | API and `npm run ask` refuse to start; ingest and search are unaffected (D22) ✅ |
 | Quote not found in cited chunk, too short, or unknown passage number | Citation marked invalid with the reason; no valid citation at all → refusal (gate 3) ✅ |
-| Question outside the corpus | Gate 1 (similarity < 0.35, no model call) or gate 2 (model refuses) ✅ — threshold provisional (D25) |
+| Question outside the corpus | Gate 1 (similarity < 0.35, no model call), gate 2 (model refuses) or gate 3 ✅ — 9/10 unanswerable refused in the eval; threshold margin is thin (D29) |
 | Empty `chunks` table | Every question refused at gate 1 instead of crashing ✅ |
-| Real quote attached to a wrong / off-topic answer | **Not caught** by the verbatim check (D24, D26 examples); measured by the faithfulness judge in Phase 4 |
+| Real quote attached to a wrong / off-topic answer | **Not caught** at answer time (D24). Measured offline: gold-citation rate 26/28 and the judge (kappa 0.46 with a human, D30). q05 and q40 still fail |
 | Chunk longer than the embedder's input window | Prevented by the 250-token limit (D7); if a single sentence were still too long, ingestion logs a warning ✅ |
 | Ingestion fails halfway (DB error, crash) | Transaction rolls back; previous chunks stay intact; command exits non-zero ✅ |
 | No corpus files found | Ingestion stops with a clear error instead of emptying the table ✅ |
 | Several processes set up the schema at once (fresh database) | Advisory lock makes them take turns (D21) ✅ |
 | Query made only of stop words ("the of and") | Keyword search returns no rows instead of an error ✅ |
 | One retriever finds nothing | Hybrid still returns the other retriever's results ✅ |
-| Casually worded question (vocabulary mismatch) | Known weakness: keyword search degrades, hybrid can be dragged down (D18 observation); measured in Phase 4 |
+| Casually worded question (vocabulary mismatch) | Measured: keyword hit@5 5/15, hybrid 10/15, vector 14/15 → the pipeline uses vector (D28) |
+| Model gives the wrong passage number for a real quote | Citation invalid → refusal if none is left; not re-mapped (D31, q17) |
 | Selective document filter on a large corpus | HNSW filters after the index scan → possibly fewer than k rows (D20); not an issue at 99 chunks |

@@ -10,8 +10,8 @@ Status legend: ⬜ not started · 🟨 in progress · ✅ merged
 | 0 — Setup | `chore/project-setup` | ✅ |
 | 1 — Ingestion | `feat/ingestion` | ✅ |
 | 2 — Retrieval | `feat/retrieval` | ✅ |
-| 3 — Answering | `feat/answering` | 🟨 |
-| 4 — Evaluation | `feat/evaluation` | ⬜ |
+| 3 — Answering | `feat/answering` | ✅ |
+| 4 — Evaluation | `feat/evaluation` | 🟨 (built, awaiting merge) |
 | 5 — CI, docs, polish | `chore/ci-docs-polish` | ⬜ |
 
 ---
@@ -88,13 +88,13 @@ Status legend: ⬜ not started · 🟨 in progress · ✅ merged
 
 - `eval/questions.jsonl`: 40 questions, 30 answerable (with gold article) and 10 unanswerable; mix casual and legal wording (D18 hypothesis); include the two known faithfulness failures from D26
 - The agent drafts candidates; **Omri verifies every gold reference against the source text**
-- `npm run eval`:
-  - Retrieval: hit@5 and MRR for vector vs keyword vs hybrid
-  - Answers: faithfulness (LLM judge, fixed rubric), citation-validity rate, refusal accuracy
+- `npm run eval:retrieval` (no model): hit@1/3/5/10 and MRR@10 for vector vs keyword vs hybrid, split by casual / legal wording; gate-1 threshold sweep
+- `npm run eval:answers` (needs the model): refusal accuracy, citation validity, gold-citation rate, faithfulness (LLM judge, fixed rubric), time per answer
+- Judge checked against blind human labels on 15 answers (`eval:judge-sheet`, `eval:judge-agreement`)
 - Choose top-k and the refusal threshold from these numbers, and write down how
 - Results committed under `eval/results/`
 
-**Done when:** the results table exists, comes from a real run, and the chosen threshold is justified in `DECISIONS.md`.
+**Done when:** the results table exists, comes from a real run, and the chosen threshold is justified in `DECISIONS.md`. ✅ Verified (real runs, `eval/results/`): vector hit@5 29/30 vs hybrid 25/30 and keyword 20/30 (casual wording is the difference) → the pipeline now uses vector (D28); threshold 0.35 kept with 0/30 false refusals and a thin margin, top-k 5 kept (D29); end to end 37/40 refusal accuracy and 26/28 gold citations; judge vs human kappa 0.46, so judge numbers are an indicator only (D30). Limitations in D32.
 
 ## Phase 5 — CI, docs, polish — `chore/ci-docs-polish`
 

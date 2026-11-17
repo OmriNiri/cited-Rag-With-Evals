@@ -1,0 +1,348 @@
+{
+  "settings": {
+    "current": 0.35
+  },
+  "similarities": [
+    {
+      "id": "q01",
+      "answerable": true,
+      "topSimilarity": 0.7588565658159944
+    },
+    {
+      "id": "q02",
+      "answerable": true,
+      "topSimilarity": 0.3666521261114072
+    },
+    {
+      "id": "q03",
+      "answerable": true,
+      "topSimilarity": 0.6858661822317881
+    },
+    {
+      "id": "q04",
+      "answerable": true,
+      "topSimilarity": 0.4993155449424902
+    },
+    {
+      "id": "q05",
+      "answerable": true,
+      "topSimilarity": 0.4342629223231005
+    },
+    {
+      "id": "q06",
+      "answerable": true,
+      "topSimilarity": 0.7924364906398049
+    },
+    {
+      "id": "q07",
+      "answerable": true,
+      "topSimilarity": 0.7680556726538732
+    },
+    {
+      "id": "q08",
+      "answerable": true,
+      "topSimilarity": 0.3957833051681632
+    },
+    {
+      "id": "q09",
+      "answerable": true,
+      "topSimilarity": 0.6377276372232559
+    },
+    {
+      "id": "q10",
+      "answerable": true,
+      "topSimilarity": 0.6769176308933814
+    },
+    {
+      "id": "q11",
+      "answerable": true,
+      "topSimilarity": 0.4721400778836484
+    },
+    {
+      "id": "q12",
+      "answerable": true,
+      "topSimilarity": 0.41562457904229666
+    },
+    {
+      "id": "q13",
+      "answerable": true,
+      "topSimilarity": 0.7525705394064737
+    },
+    {
+      "id": "q14",
+      "answerable": true,
+      "topSimilarity": 0.58089194381319
+    },
+    {
+      "id": "q15",
+      "answerable": true,
+      "topSimilarity": 0.49048650378152847
+    },
+    {
+      "id": "q16",
+      "answerable": true,
+      "topSimilarity": 0.5530402330732452
+    },
+    {
+      "id": "q17",
+      "answerable": true,
+      "topSimilarity": 0.7133501722470874
+    },
+    {
+      "id": "q18",
+      "answerable": true,
+      "topSimilarity": 0.4798527597942446
+    },
+    {
+      "id": "q19",
+      "answerable": true,
+      "topSimilarity": 0.7530907771478754
+    },
+    {
+      "id": "q20",
+      "answerable": true,
+      "topSimilarity": 0.6944504818991548
+    },
+    {
+      "id": "q21",
+      "answerable": true,
+      "topSimilarity": 0.831586449401262
+    },
+    {
+      "id": "q22",
+      "answerable": true,
+      "topSimilarity": 0.39390374763764413
+    },
+    {
+      "id": "q23",
+      "answerable": true,
+      "topSimilarity": 0.7577359802318014
+    },
+    {
+      "id": "q24",
+      "answerable": true,
+      "topSimilarity": 0.7877584099769817
+    },
+    {
+      "id": "q25",
+      "answerable": true,
+      "topSimilarity": 0.5428616677009153
+    },
+    {
+      "id": "q26",
+      "answerable": true,
+      "topSimilarity": 0.6237223411020464
+    },
+    {
+      "id": "q27",
+      "answerable": true,
+      "topSimilarity": 0.7234539389610496
+    },
+    {
+      "id": "q28",
+      "answerable": true,
+      "topSimilarity": 0.3660937388055039
+    },
+    {
+      "id": "q29",
+      "answerable": true,
+      "topSimilarity": 0.4475482773107753
+    },
+    {
+      "id": "q30",
+      "answerable": true,
+      "topSimilarity": 0.6522679328918642
+    },
+    {
+      "id": "q31",
+      "answerable": false,
+      "topSimilarity": 0.21439018845558777
+    },
+    {
+      "id": "q32",
+      "answerable": false,
+      "topSimilarity": 0.14024188278663885
+    },
+    {
+      "id": "q33",
+      "answerable": false,
+      "topSimilarity": 0.24703403588825412
+    },
+    {
+      "id": "q34",
+      "answerable": false,
+      "topSimilarity": 0.3990673901318387
+    },
+    {
+      "id": "q35",
+      "answerable": false,
+      "topSimilarity": 0.27291503275453843
+    },
+    {
+      "id": "q36",
+      "answerable": false,
+      "topSimilarity": 0.4195720063619629
+    },
+    {
+      "id": "q37",
+      "answerable": false,
+      "topSimilarity": 0.3289204443788022
+    },
+    {
+      "id": "q38",
+      "answerable": false,
+      "topSimilarity": 0.41610300061017336
+    },
+    {
+      "id": "q39",
+      "answerable": false,
+      "topSimilarity": 0.3865989351393704
+    },
+    {
+      "id": "q40",
+      "answerable": false,
+      "topSimilarity": 0.552190476394835
+    }
+  ],
+  "sweep": [
+    {
+      "threshold": 0.2,
+      "falseRefusals": [],
+      "passedUnanswerable": [
+        "q31",
+        "q33",
+        "q34",
+        "q35",
+        "q36",
+        "q37",
+        "q38",
+        "q39",
+        "q40"
+      ]
+    },
+    {
+      "threshold": 0.25,
+      "falseRefusals": [],
+      "passedUnanswerable": [
+        "q34",
+        "q35",
+        "q36",
+        "q37",
+        "q38",
+        "q39",
+        "q40"
+      ]
+    },
+    {
+      "threshold": 0.3,
+      "falseRefusals": [],
+      "passedUnanswerable": [
+        "q34",
+        "q36",
+        "q37",
+        "q38",
+        "q39",
+        "q40"
+      ]
+    },
+    {
+      "threshold": 0.35,
+      "falseRefusals": [],
+      "passedUnanswerable": [
+        "q34",
+        "q36",
+        "q38",
+        "q39",
+        "q40"
+      ]
+    },
+    {
+      "threshold": 0.4,
+      "falseRefusals": [
+        "q02",
+        "q08",
+        "q22",
+        "q28"
+      ],
+      "passedUnanswerable": [
+        "q36",
+        "q38",
+        "q40"
+      ]
+    },
+    {
+      "threshold": 0.45,
+      "falseRefusals": [
+        "q02",
+        "q05",
+        "q08",
+        "q12",
+        "q22",
+        "q28",
+        "q29"
+      ],
+      "passedUnanswerable": [
+        "q40"
+      ]
+    },
+    {
+      "threshold": 0.5,
+      "falseRefusals": [
+        "q02",
+        "q04",
+        "q05",
+        "q08",
+        "q11",
+        "q12",
+        "q15",
+        "q18",
+        "q22",
+        "q28",
+        "q29"
+      ],
+      "passedUnanswerable": [
+        "q40"
+      ]
+    },
+    {
+      "threshold": 0.55,
+      "falseRefusals": [
+        "q02",
+        "q04",
+        "q05",
+        "q08",
+        "q11",
+        "q12",
+        "q15",
+        "q18",
+        "q22",
+        "q25",
+        "q28",
+        "q29"
+      ],
+      "passedUnanswerable": [
+        "q40"
+      ]
+    },
+    {
+      "threshold": 0.6,
+      "falseRefusals": [
+        "q02",
+        "q04",
+        "q05",
+        "q08",
+        "q11",
+        "q12",
+        "q14",
+        "q15",
+        "q16",
+        "q18",
+        "q22",
+        "q25",
+        "q28",
+        "q29"
+      ],
+      "passedUnanswerable": []
+    }
+  ]
+}

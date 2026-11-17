@@ -26,7 +26,11 @@
     "test:watch": "vitest",
     "test:cov": "vitest run --coverage",
     "test:int": "vitest run --config vitest.config.int.ts",
-    "ask": "npm run build && node dist/cli/ask.js"
+    "ask": "npm run build && node dist/cli/ask.js",
+    "eval:retrieval": "npm run build && node dist/cli/eval-retrieval.js",
+    "eval:answers": "npm run build && node dist/cli/eval-answers.js",
+    "eval:judge-sheet": "npm run build && node dist/cli/judge-sheet.js",
+    "eval:judge-agreement": "npm run build && node dist/cli/judge-agreement.js"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.3.2",

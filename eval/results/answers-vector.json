@@ -1,0 +1,902 @@
+{
+  "settings": {
+    "model": "llama3.1:8b",
+    "mode": "vector",
+    "topK": 5,
+    "minTopSimilarity": 0.35
+  },
+  "summary": {
+    "questions": 40,
+    "errors": 0,
+    "answerableAnswered": 28,
+    "answerableRefused": 2,
+    "unanswerableRefused": 9,
+    "unanswerableAnswered": 1,
+    "refusalAccuracy": {
+      "count": 37,
+      "of": 40
+    },
+    "refusedBy": {
+      "answerable": {
+        "no_valid_citation": 2
+      },
+      "unanswerable": {
+        "low_retrieval_score": 5,
+        "model_insufficient_context": 3,
+        "no_valid_citation": 1
+      }
+    },
+    "citationValidity": {
+      "count": 31,
+      "of": 33
+    },
+    "goldCitation": {
+      "count": 26,
+      "of": 28
+    },
+    "faithfulness": {
+      "supported": 17,
+      "partial": 9,
+      "unsupported": 3,
+      "judgeErrors": 0
+    },
+    "seconds": {
+      "median": 8.850000000000001,
+      "max": 19.6
+    }
+  },
+  "rows": [
+    {
+      "id": "q01",
+      "answerable": true,
+      "wording": "legal",
+      "goldArticles": [
+        "Art. 335c"
+      ],
+      "outcome": "answered",
+      "answer": "The notice period is one month during the first year of service, two months in the second to ninth years of service, and three months thereafter.",
+      "citations": [
+        {
+          "passage": 2,
+          "chunkId": "co-individual-employment-contract:art-335c:0",
+          "article": "Art. 335c",
+          "quote": "The employment relationship may be terminated at one month’s notice during the first year of service, at two months’ notice in the second to ninth years of service and at three months’ notice thereafter,",
+          "valid": true
+        }
+      ],
+      "seconds": 19.6,
+      "judge": {
+        "verdict": "partial",
+        "reason": "The quotes state the notice period after the probation period has ended, but the probation period itself is not mentioned."
+      }
+    },
+    {
+      "id": "q02",
+      "answerable": true,
+      "wording": "casual",
+      "goldArticles": [
+        "Art. 335c"
+      ],
+      "outcome": "refused",
+      "refusalReason": "no_valid_citation",
+      "answer": "",
+      "citations": [
+        {
+          "passage": 2,
+          "chunkId": "co-individual-employment-contract:art-335c:0",
+          "article": "Art. 335c",
+          "quote": "The employment relationship may be terminated at two months’ notice in the second to ninth years of service",
+          "valid": false,
+          "invalidReason": "not_found"
+        }
+      ],
+      "seconds": 6.7
+    },
+    {
+      "id": "q03",
+      "answerable": true,
+      "wording": "legal",
+      "goldArticles": [
+        "Art. 329a"
+      ],
+      "outcome": "answered",
+      "answer": "At least four weeks' holiday and five weeks' holiday for employees under the age of 20.",
+      "citations": [
+        {
+          "passage": 1,
+          "chunkId": "co-individual-employment-contract:art-329a:0",
+          "article": "Art. 329a",
+          "quote": "The employer must allow the employee during each year of service at least four weeks’ holiday and five weeks’ holiday for employees under the age of 20.",
+          "valid": true
+        }
+      ],
+      "seconds": 8.9,
+      "judge": {
+        "verdict": "supported",
+        "reason": "The quotes directly state that employees are entitled to at least four weeks' holiday and five weeks' holiday for employees under the age of 20."
+      }
+    },
+    {
+      "id": "q04",
+      "answerable": true,
+      "wording": "casual",
+      "goldArticles": [
+        "Art. 329a"
+      ],
+      "outcome": "answered",
+      "answer": "At least four weeks of holiday",
+      "citations": [
+        {
+          "passage": 2,
+          "chunkId": "co-individual-employment-contract:art-329a:0",
+          "article": "Art. 329a",
+          "quote": "The employer must allow the employee during each year of service at least four weeks’ holiday",
+          "valid": true
+        }
+      ],
+      "seconds": 8.2,
+      "judge": {
+        "verdict": "supported",
+        "reason": "The quote directly states that the employer must allow at least four weeks of holiday."
+      }
+    },
+    {
+      "id": "q05",
+      "answerable": true,
+      "wording": "casual",
+      "goldArticles": [
+        "Art. 336c"
+      ],
+      "outcome": "answered",
+      "answer": "No, the employer must provide care and medical assistance for a limited period.",
+      "citations": [
+        {
+          "passage": 1,
+          "chunkId": "co-individual-employment-contract:art-328a:0",
+          "article": "Art. 328a",
+          "quote": "If the employee is prevented from working through no fault of his own by sickness or accident, the employer must provide care and medical assistance for a limited period,",
+          "valid": true
+        }
+      ],
+      "seconds": 9.2,
+      "judge": {
+        "verdict": "supported",
+        "reason": "The quote directly states that the employer must provide care and medical assistance for a limited period, implying that the employee cannot be fired while sick."
+      }
+    },
+    {
+      "id": "q06",
+      "answerable": true,
+      "wording": "legal",
+      "goldArticles": [
+        "Art. 336c"
+      ],
+      "outcome": "answered",
+      "answer": "During the pregnancy of an employee and the sixteen weeks following birth, and between the start of leave in accordance with Article 329f paragraph 3 and the last day of leave taken, but for a maximum of three months from the end of the period in accordance with letter c.",
+      "citations": [
+        {
+          "passage": 4,
+          "chunkId": "co-individual-employment-contract:art-336c:0",
+          "article": "Art. 336c",
+          "quote": "during the pregnancy of an employee and the sixteen weeks following birth;",
+          "valid": true
+        },
+        {
+          "passage": 4,
+          "chunkId": "co-individual-employment-contract:art-336c:0",
+          "article": "Art. 336c",
+          "quote": "between the start of leave in accordance with Article 329f paragraph 3 and the last day of leave taken, but for a maximum of three months from the end of the period in accordance with letter c;",
+          "valid": true
+        }
+      ],
+      "seconds": 14,
+      "judge": {
+        "verdict": "partial",
+        "reason": "The answer states that the employer may not terminate the employment relationship for a maximum of three months from the end of the period in accordance with letter c, but this is not stated in the quotes."
+      }
+    },
+    {
+      "id": "q07",
+      "answerable": true,
+      "wording": "legal",
+      "goldArticles": [
+        "Art. 321c"
+      ],
+      "outcome": "answered",
+      "answer": "The employee is obliged to perform overtime to the extent that he is able and may conscionably be expected to do so. Overtime must be compensated by paying the employee his normal salary and a supplement of at least one-quarter thereof, unless otherwise agreed in writing or under a standard employment contract or collective employment contract.",
+      "citations": [
+        {
+          "passage": 1,
+          "chunkId": "co-individual-employment-contract:art-321c:0",
+          "article": "Art. 321c",
+          "quote": "If more hours of work are required than envisaged under the employment contract or provided for by custom, standard employment contract or collective employment contract, the employee is obliged to perform such overtime to the extent that he is able and may conscionably be expected to do so.",
+          "valid": true
+        },
+        {
+          "passage": 1,
+          "chunkId": "co-individual-employment-contract:art-321c:0",
+          "article": "Art. 321c",
+          "quote": "Where the overtime is not compensated by time off in lieu and unless otherwise agreed in writing or under a standard employment contract or collective employment contract, the employer must compensate the employee for the overtime worked by paying him his normal salary and a supplement of at least one-quarter thereof.",
+          "valid": true
+        }
+      ],
+      "seconds": 19.1,
+      "judge": {
+        "verdict": "supported",
+        "reason": "Both the obligation to perform overtime and the method of compensation are stated in the quotes."
+      }
+    },
+    {
+      "id": "q08",
+      "answerable": true,
+      "wording": "casual",
+      "goldArticles": [
+        "Art. 330a"
+      ],
+      "outcome": "answered",
+      "answer": "Yes, you can ask your boss for a letter that only says how long you worked there and what your job was.",
+      "citations": [
+        {
+          "passage": 4,
+          "chunkId": "co-individual-employment-contract:art-330a:0",
+          "article": "Art. 330a",
+          "quote": "the nature and duration of the employment relationship",
+          "valid": true
+        }
+      ],
+      "seconds": 8.2,
+      "judge": {
+        "verdict": "partial",
+        "reason": "The answer includes 'what my job was', which is not stated in the quotes."
+      }
+    },
+    {
+      "id": "q09",
+      "answerable": true,
+      "wording": "legal",
+      "goldArticles": [
+        "Art. 330a"
+      ],
+      "outcome": "answered",
+      "answer": "The nature and the duration of the employment relationship, the quality of his work and his conduct.",
+      "citations": [
+        {
+          "passage": 1,
+          "chunkId": "co-individual-employment-contract:art-330a:0",
+          "article": "Art. 330a",
+          "quote": "the nature and the duration of the employment relationship, the quality of his work and his conduct",
+          "valid": true
+        }
+      ],
+      "seconds": 9.4,
+      "judge": {
+        "verdict": "supported",
+        "reason": "The quotes directly state the required content of an employment reference."
+      }
+    },
+    {
+      "id": "q10",
+      "answerable": true,
+      "wording": "legal",
+      "goldArticles": [
+        "Art. 335b"
+      ],
+      "outcome": "answered",
+      "answer": "The probation period is the first month of an employment relationship and may not exceed three months. During the probation period, either party may terminate the contract at any time by giving seven days’ notice.",
+      "citations": [
+        {
+          "passage": 1,
+          "chunkId": "co-individual-employment-contract:art-335b:0",
+          "article": "Art. 335b",
+          "quote": "During the probation period, either party may terminate the contract at any time by giving seven days’ notice; the probation period is considered to be the first month of an employment relationship.",
+          "valid": true
+        }
+      ],
+      "seconds": 10.9,
+      "judge": {
+        "verdict": "partial",
+        "reason": "The quotes state the probation period is the first month, but do not state it may not exceed three months."
+      }
+    },
+    {
+      "id": "q11",
+      "answerable": true,
+      "wording": "casual",
+      "goldArticles": [
+        "Art. 335b"
+      ],
+      "outcome": "answered",
+      "answer": "During the probation period, either party may terminate the contract at any time by giving seven days’ notice",
+      "citations": [
+        {
+          "passage": 2,
+          "chunkId": "co-individual-employment-contract:art-335b:0",
+          "article": "Art. 335b",
+          "quote": "During the probation period, either party may terminate the contract at any time by giving seven days’ notice",
+          "valid": true
+        }
+      ],
+      "seconds": 8.9,
+      "judge": {
+        "verdict": "supported",
+        "reason": "The quote directly states that either party may terminate the contract at any time by giving seven days’ notice."
+      }
+    },
+    {
+      "id": "q12",
+      "answerable": true,
+      "wording": "casual",
+      "goldArticles": [
+        "Art. 324a"
+      ],
+      "outcome": "answered",
+      "answer": "If you have compulsory insurance prescribed by law against the financial consequences of being prevented from working by personal circumstances for which you are not at fault, the employer is not obliged to pay your salary where the insurance benefits for that limited period cover at least four-fifths of the salary income lost over that period.",
+      "citations": [
+        {
+          "passage": 1,
+          "chunkId": "co-individual-employment-contract:art-324b:0",
+          "article": "Art. 324b",
+          "quote": "If the employee has compulsory insurance prescribed by law against the financial consequences of being prevented from working by personal circumstances for which he is not at fault,",
+          "valid": true
+        }
+      ],
+      "seconds": 13.4,
+      "judge": {
+        "verdict": "partial",
+        "reason": "The quotes mention personal circumstances for which the employee is not at fault, but do not mention the employee breaking their leg."
+      }
+    },
+    {
+      "id": "q13",
+      "answerable": true,
+      "wording": "legal",
+      "goldArticles": [
+        "Art. 329f"
+      ],
+      "outcome": "answered",
+      "answer": "At least 14 weeks",
+      "citations": [
+        {
+          "passage": 1,
+          "chunkId": "co-individual-employment-contract:art-329f:0",
+          "article": "Art. 329f",
+          "quote": "After having given birth, a female employee is entitled to maternity leave of at least 14 weeks.",
+          "valid": true
+        }
+      ],
+      "seconds": 10.1,
+      "judge": {
+        "verdict": "supported",
+        "reason": "The quote directly states that maternity leave is at least 14 weeks."
+      }
+    },
+    {
+      "id": "q14",
+      "answerable": true,
+      "wording": "casual",
+      "goldArticles": [
+        "Art. 329g"
+      ],
+      "outcome": "answered",
+      "answer": "Two weeks",
+      "citations": [
+        {
+          "passage": 1,
+          "chunkId": "co-individual-employment-contract:art-329g:0",
+          "article": "Art. 329g",
+          "quote": "The following persons are entitled to parental leave of two weeks:",
+          "valid": true
+        }
+      ],
+      "seconds": 9,
+      "judge": {
+        "verdict": "supported",
+        "reason": "The quotes directly state that the person is entitled to two weeks of parental leave."
+      }
+    },
+    {
+      "id": "q15",
+      "answerable": true,
+      "wording": "casual",
+      "goldArticles": [
+        "Art. 327a"
+      ],
+      "outcome": "answered",
+      "answer": "No, that is not allowed.",
+      "citations": [
+        {
+          "passage": 1,
+          "chunkId": "co-individual-employment-contract:art-327a:0",
+          "article": "Art. 327a",
+          "quote": "Any agreement whereby the employee must bear all or part of such necessary expenses is void.",
+          "valid": true
+        }
+      ],
+      "seconds": 8.1,
+      "judge": {
+        "verdict": "unsupported",
+        "reason": "The answer states that the agreement is void, but it does not state that the employer cannot ask the employee to pay for the costs."
+      }
+    },
+    {
+      "id": "q16",
+      "answerable": true,
+      "wording": "casual",
+      "goldArticles": [
+        "Art. 329c"
+      ],
+      "outcome": "answered",
+      "answer": "No, that is not legal.",
+      "citations": [
+        {
+          "passage": 3,
+          "chunkId": "co-individual-employment-contract:art-329c:0",
+          "article": "Art. 329c",
+          "quote": "The holiday entitlement for a given year of service is generally granted during that year; at least two weeks of holiday must be taken consecutively.",
+          "valid": true
+        }
+      ],
+      "seconds": 8.5,
+      "judge": {
+        "verdict": "unsupported",
+        "reason": "The answer states that taking more than one week of vacation at a time is legal, but the quote only mentions consecutive weeks, not the maximum number of weeks."
+      }
+    },
+    {
+      "id": "q17",
+      "answerable": true,
+      "wording": "legal",
+      "goldArticles": [
+        "Art. 329d"
+      ],
+      "outcome": "refused",
+      "refusalReason": "no_valid_citation",
+      "answer": "",
+      "citations": [
+        {
+          "passage": 2,
+          "chunkId": "co-individual-employment-contract:art-329b:0",
+          "article": "Art. 329b",
+          "quote": "During the employment relationship, the holiday entitlement may not be replaced by monetary payments or other benefits.",
+          "valid": false,
+          "invalidReason": "not_found"
+        }
+      ],
+      "seconds": 8.8
+    },
+    {
+      "id": "q18",
+      "answerable": true,
+      "wording": "casual",
+      "goldArticles": [
+        "Art. 332"
+      ],
+      "outcome": "answered",
+      "answer": "The employer owns the invention.",
+      "citations": [
+        {
+          "passage": 1,
+          "chunkId": "co-individual-employment-contract:art-332:0",
+          "article": "Art. 332",
+          "quote": "Inventions and designs produced by the employee alone or in collaboration with others in the course of his work for the employer and in performance of his contractual obligations belong to the employer, whether or not they may be protected.",
+          "valid": true
+        }
+      ],
+      "seconds": 8.7,
+      "judge": {
+        "verdict": "supported",
+        "reason": "The quotes directly state that inventions produced by the employee in the course of their work belong to the employer."
+      }
+    },
+    {
+      "id": "q19",
+      "answerable": true,
+      "wording": "legal",
+      "goldArticles": [
+        "Art. 333"
+      ],
+      "outcome": "answered",
+      "answer": "The employment relationship and all attendant rights and obligations pass to the acquirer as of the day of the transfer, unless the employee refuses such transfer.",
+      "citations": [
+        {
+          "passage": 1,
+          "chunkId": "co-individual-employment-contract:art-333:0",
+          "article": "Art. 333",
+          "quote": "Where the employer transfers the company or a part thereof to a third party, the employment relationship and all attendant rights and obligations pass to the acquirer as of the day of the transfer, unless the employee refuses such transfer.",
+          "valid": true
+        }
+      ],
+      "seconds": 11.3,
+      "judge": {
+        "verdict": "supported",
+        "reason": "The quote directly states that the employment relationship and all attendant rights and obligations pass to the acquirer as of the day of the transfer, unless the employee refuses such transfer."
+      }
+    },
+    {
+      "id": "q20",
+      "answerable": true,
+      "wording": "legal",
+      "goldArticles": [
+        "Art. 336"
+      ],
+      "outcome": "answered",
+      "answer": "Notice of termination is unlawful where given by one party on account of an attribute pertaining to the person of the other party, unless such attribute relates to the employment relationship or substantially impairs cooperation within the business.",
+      "citations": [
+        {
+          "passage": 3,
+          "chunkId": "co-individual-employment-contract:art-336:0",
+          "article": "Art. 336",
+          "quote": "Notice of termination is unlawful where given by one party:",
+          "valid": true
+        }
+      ],
+      "seconds": 11.3,
+      "judge": {
+        "verdict": "partial",
+        "reason": "The quotes only state the condition for unlawful notice of termination, but not the specific reason for unlawfulness mentioned in the answer."
+      }
+    },
+    {
+      "id": "q21",
+      "answerable": true,
+      "wording": "legal",
+      "goldArticles": [
+        "Art. 336a"
+      ],
+      "outcome": "answered",
+      "answer": "six months’ salary for the employee",
+      "citations": [
+        {
+          "passage": 1,
+          "chunkId": "co-individual-employment-contract:art-336a:0",
+          "article": "Art. 336a",
+          "quote": "The court determines the compensation taking due account of all the circumstances, though it must not exceed an amount equivalent to six months’ salary for the employee.",
+          "valid": true
+        }
+      ],
+      "seconds": 8.9,
+      "judge": {
+        "verdict": "supported",
+        "reason": "The quotes state that the compensation must not exceed six months’ salary."
+      }
+    },
+    {
+      "id": "q22",
+      "answerable": true,
+      "wording": "casual",
+      "goldArticles": [
+        "Art. 337c"
+      ],
+      "outcome": "answered",
+      "answer": "You are entitled to damages in the amount you would have earned had the employment relationship ended after the required notice period or on expiry of its agreed duration.",
+      "citations": [
+        {
+          "passage": 1,
+          "chunkId": "co-individual-employment-contract:art-337c:0",
+          "article": "Art. 337c",
+          "quote": "Where the employer dismisses the employee with immediate effect without good cause, the employee is entitled to damages in the amount he would have earned had the employment relationship ended after the required notice period or on expiry of its agreed duration.",
+          "valid": true
+        }
+      ],
+      "seconds": 12.1,
+      "judge": {
+        "verdict": "supported",
+        "reason": "The quote directly states that the employee is entitled to damages in the specified amount."
+      }
+    },
+    {
+      "id": "q23",
+      "answerable": true,
+      "wording": "legal",
+      "goldArticles": [
+        "Art. 337"
+      ],
+      "outcome": "answered",
+      "answer": "Both employer and employee may terminate the employment relationship with immediate effect at any time for good cause.",
+      "citations": [
+        {
+          "passage": 1,
+          "chunkId": "co-individual-employment-contract:art-337:0",
+          "article": "Art. 337",
+          "quote": "Both employer and employee may terminate the employment relationship with immediate effect at any time for good cause;",
+          "valid": true
+        }
+      ],
+      "seconds": 8.9,
+      "judge": {
+        "verdict": "supported",
+        "reason": "The quotes directly state that both employer and employee may terminate the employment relationship with immediate effect at any time for good cause."
+      }
+    },
+    {
+      "id": "q24",
+      "answerable": true,
+      "wording": "legal",
+      "goldArticles": [
+        "Art. 340"
+      ],
+      "outcome": "answered",
+      "answer": "The prohibition of competition is binding only where the employment relationship allows the employee to have knowledge of the employer’s clientele or manufacturing and trade secrets and where the use of such knowledge might cause the employer substantial harm.",
+      "citations": [
+        {
+          "passage": 1,
+          "chunkId": "co-individual-employment-contract:art-340:0",
+          "article": "Art. 340",
+          "quote": "The prohibition of competition is binding only where the employment relationship allows the employee to have knowledge of the employer’s clientele or manufacturing and trade secrets and where the use of such knowledge might cause the employer substantial harm.",
+          "valid": true
+        }
+      ],
+      "seconds": 11.4,
+      "judge": {
+        "verdict": "supported",
+        "reason": "The quote directly states the conditions under which a prohibition of competition is binding on the employee."
+      }
+    },
+    {
+      "id": "q25",
+      "answerable": true,
+      "wording": "casual",
+      "goldArticles": [
+        "Art. 340a"
+      ],
+      "outcome": "answered",
+      "answer": "No, the prohibition of competition may exceed three years only in special circumstances.",
+      "citations": [
+        {
+          "passage": 2,
+          "chunkId": "co-individual-employment-contract:art-340a:0",
+          "article": "Art. 340a",
+          "quote": "The prohibition must be appropriately restricted with regard to place, time and scope such that it does not unfairly compromise the employee’s future economic activity; it may exceed three years only in special circumstances.",
+          "valid": true
+        }
+      ],
+      "seconds": 6.8,
+      "judge": {
+        "verdict": "partial",
+        "reason": "The quotes state that the prohibition may exceed three years, but do not mention five years."
+      }
+    },
+    {
+      "id": "q26",
+      "answerable": true,
+      "wording": "casual",
+      "goldArticles": [
+        "Art. 339b",
+        "Art. 339c"
+      ],
+      "outcome": "answered",
+      "answer": "Yes, you are entitled to a severance allowance.",
+      "citations": [
+        {
+          "passage": 1,
+          "chunkId": "co-individual-employment-contract:art-339b:0",
+          "article": "Art. 339b",
+          "quote": "Where an employment relationship with an employee of at least 50 years of age comes to an end after twenty years or more of service, the employer must pay the employee a severance allowance.",
+          "valid": true
+        }
+      ],
+      "seconds": 9.9,
+      "judge": {
+        "verdict": "partial",
+        "reason": "The quotes state the age requirement as 50 years of age, not 55."
+      }
+    },
+    {
+      "id": "q27",
+      "answerable": true,
+      "wording": "legal",
+      "goldArticles": [
+        "Art. 330b"
+      ],
+      "outcome": "answered",
+      "answer": "Yes, the employer must inform the employee in writing of the essential terms of the employment contract.",
+      "citations": [
+        {
+          "passage": 1,
+          "chunkId": "co-individual-employment-contract:art-330b:0",
+          "article": "Art. 330b",
+          "quote": "the names of the contracting parties;",
+          "valid": true
+        }
+      ],
+      "seconds": 7,
+      "judge": {
+        "verdict": "unsupported",
+        "reason": "The answer states that the employer must inform the employee in writing, but the quotes only mention the names of the contracting parties, not the employer or the employee, and not the requirement of informing in writing."
+      }
+    },
+    {
+      "id": "q28",
+      "answerable": true,
+      "wording": "casual",
+      "goldArticles": [
+        "Art. 321e"
+      ],
+      "outcome": "answered",
+      "answer": "The employee is liable for any damage he causes to the employer whether wilfully or by negligence.",
+      "citations": [
+        {
+          "passage": 3,
+          "chunkId": "co-individual-employment-contract:art-321e:0",
+          "article": "Art. 321e",
+          "quote": "The employee is liable for any damage he causes to the employer whether wilfully or by negligence.",
+          "valid": true
+        }
+      ],
+      "seconds": 7.2,
+      "judge": {
+        "verdict": "supported",
+        "reason": "The quote directly states that the employee is liable for any damage caused to the employer, regardless of intent."
+      }
+    },
+    {
+      "id": "q29",
+      "answerable": true,
+      "wording": "casual",
+      "goldArticles": [
+        "Art. 329h"
+      ],
+      "outcome": "answered",
+      "answer": "No more than three days per event and no more than ten days per year.",
+      "citations": [
+        {
+          "passage": 1,
+          "chunkId": "co-individual-employment-contract:art-329h:0",
+          "article": "Art. 329h",
+          "quote": "An employee is entitled to paid leave for the time he or she spends caring for a family member or life partner with health problems; however, the leave is limited to no more than three days per event and no more than ten days per year.",
+          "valid": true
+        }
+      ],
+      "seconds": 11.1,
+      "judge": {
+        "verdict": "supported",
+        "reason": "The quotes directly state the limit of three days per event and ten days per year."
+      }
+    },
+    {
+      "id": "q30",
+      "answerable": true,
+      "wording": "legal",
+      "goldArticles": [
+        "Art. 328"
+      ],
+      "outcome": "answered",
+      "answer": "The employer must ensure that employees are not sexually harassed and that any victim of sexual harassment suffers no further adverse consequences.",
+      "citations": [
+        {
+          "passage": 1,
+          "chunkId": "co-individual-employment-contract:art-328:0",
+          "article": "Art. 328",
+          "quote": "ensure that employees are not sexually harassed and that any victim of sexual harassment suffers no further adverse consequences",
+          "valid": true
+        }
+      ],
+      "seconds": 9.9,
+      "judge": {
+        "verdict": "supported",
+        "reason": "The answer is directly stated in quote [1]."
+      }
+    },
+    {
+      "id": "q31",
+      "answerable": false,
+      "wording": "casual",
+      "goldArticles": [],
+      "outcome": "refused",
+      "refusalReason": "low_retrieval_score",
+      "answer": "",
+      "citations": [],
+      "seconds": 0.1
+    },
+    {
+      "id": "q32",
+      "answerable": false,
+      "wording": "casual",
+      "goldArticles": [],
+      "outcome": "refused",
+      "refusalReason": "low_retrieval_score",
+      "answer": "",
+      "citations": [],
+      "seconds": 0
+    },
+    {
+      "id": "q33",
+      "answerable": false,
+      "wording": "casual",
+      "goldArticles": [],
+      "outcome": "refused",
+      "refusalReason": "low_retrieval_score",
+      "answer": "",
+      "citations": [],
+      "seconds": 0
+    },
+    {
+      "id": "q34",
+      "answerable": false,
+      "wording": "casual",
+      "goldArticles": [],
+      "outcome": "refused",
+      "refusalReason": "model_insufficient_context",
+      "answer": "",
+      "citations": [],
+      "seconds": 7.8
+    },
+    {
+      "id": "q35",
+      "answerable": false,
+      "wording": "casual",
+      "goldArticles": [],
+      "outcome": "refused",
+      "refusalReason": "low_retrieval_score",
+      "answer": "",
+      "citations": [],
+      "seconds": 0
+    },
+    {
+      "id": "q36",
+      "answerable": false,
+      "wording": "casual",
+      "goldArticles": [],
+      "outcome": "refused",
+      "refusalReason": "model_insufficient_context",
+      "answer": "",
+      "citations": [],
+      "seconds": 4.8
+    },
+    {
+      "id": "q37",
+      "answerable": false,
+      "wording": "casual",
+      "goldArticles": [],
+      "outcome": "refused",
+      "refusalReason": "low_retrieval_score",
+      "answer": "",
+      "citations": [],
+      "seconds": 0
+    },
+    {
+      "id": "q38",
+      "answerable": false,
+      "wording": "legal",
+      "goldArticles": [],
+      "outcome": "refused",
+      "refusalReason": "no_valid_citation",
+      "answer": "",
+      "citations": [],
+      "seconds": 3.6
+    },
+    {
+      "id": "q39",
+      "answerable": false,
+      "wording": "casual",
+      "goldArticles": [],
+      "outcome": "refused",
+      "refusalReason": "model_insufficient_context",
+      "answer": "",
+      "citations": [],
+      "seconds": 5
+    },
+    {
+      "id": "q40",
+      "answerable": false,
+      "wording": "casual",
+      "goldArticles": [],
+      "outcome": "answered",
+      "answer": "The employer must pay the agreed or customary salary or the salary that is fixed by standard employment contract or collective employment contract.",
+      "citations": [
+        {
+          "passage": 4,
+          "chunkId": "co-individual-employment-contract:art-322:0",
+          "article": "Art. 322",
+          "quote": "The employer must pay the agreed or customary salary",
+          "valid": true
+        }
+      ],
+      "seconds": 7.3,
+      "judge": {
+        "verdict": "partial",
+        "reason": "The answer implies that the employer can change the salary, but the quotes only state what the employer must pay, not that they can change it."
+      }
+    }
+  ]
+}
