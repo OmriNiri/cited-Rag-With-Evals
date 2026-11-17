@@ -12,7 +12,7 @@ Status legend: ⬜ not started · 🟨 in progress · ✅ merged
 | 2 — Retrieval | `feat/retrieval` | ✅ |
 | 3 — Answering | `feat/answering` | ✅ |
 | 4 — Evaluation | `feat/evaluation` | ✅ |
-| 5 — CI, docs, polish | `chore/ci-docs-polish` | 🟨 (built, awaiting merge) |
+| 5 — CI, docs, polish | `chore/ci-docs-polish` | ✅ |
 
 ---
 
