@@ -1,6 +1,6 @@
 # Architecture
 
-> **Status: Phase 4 built** (setup, ingestion, retrieval, answering, and evaluation: retrieval and answer metrics on a verified 40-question set, an LLM judge checked against human labels, and the retriever / threshold / top-k chosen from those numbers). Each section is updated as its phase is built; anything not built yet is marked _(planned)_.
+> **Status: all phases built** (setup, ingestion, retrieval, answering, evaluation, and CI with a retrieval-quality gate). This document describes what exists; reasons and rejected options are in `DECISIONS.md` (D1–D33).
 
 ## 1. What the system does
 
@@ -73,6 +73,7 @@ flowchart LR
 | Answer eval + metrics | Every question through `AnswerService`; refusal 2×2, citation validity, gold-citation rate, time (D28) | 4 ✅ |
 | Faithfulness judge | Same model, fixed rubric, sees only the valid quotes; supported / partial / unsupported (D30) | 4 ✅ |
 | Judge check | Blind sheet of 15 answers for hand labels; agreement + Cohen's kappa against the judge (D30) | 4 ✅ |
+| Retrieval gate + `npm run eval:gate` | Pure check of the `/ask` retriever's hit@5, MRR@10 and gate-1 false refusals against fixed limits; exit 1 on failure (D33) | 5 ✅ |
 
 ### 2.1 Code layout (D10)
 
@@ -85,6 +86,7 @@ src/
     search.ts                      `npm run search` (+ parse-search-args, format-hits)
     ask.ts                         `npm run ask` (+ parse-ask-args, format-answer)
     eval-retrieval.ts              `npm run eval:retrieval`
+    eval-gate.ts                   `npm run eval:gate` (CI quality gate)
     eval-answers.ts                `npm run eval:answers` (+ parse-eval-answers-args, --rescore)
     judge-sheet.ts, judge-agreement.ts   `npm run eval:judge-sheet` / `eval:judge-agreement`
   health/health.controller.ts      GET /health
@@ -126,6 +128,7 @@ src/
     relabel-rows.ts                --rescore: apply corrected labels to saved rows
     judge/                         judge prompt, verdict schema + parser, FaithfulnessJudge
     judge-check/                   pick-spread, blind sheet build/parse, agreement (kappa)
+    gate/                          gate.config (limits), check-gate, report, results reader
     format-*-report.ts, write-results.ts   markdown + JSON to eval/results/ (no timestamps)
     evaluation.config.ts           EVAL_DEPTH 10, EVAL_KS, SWEEP_THRESHOLDS, JUDGE_CHECK_SIZE 15
 test/                              integration tests (*.int-spec.ts) + helpers
@@ -268,7 +271,7 @@ Source of truth: `src/infrastructure/database/schema.sql` (commented line by lin
 
 Indexes: **HNSW** on `embedding` with `vector_cosine_ops` (must match the `<=>` operator used in queries, or it is ignored), **GIN** on `tsv` (word → rows). The `vector` extension is created in `public` so tests can run in their own schema (D15).
 
-## 5. Failure modes _(to be completed per phase)_
+## 5. Failure modes
 
 | Failure | Handling |
 |---|---|
@@ -291,3 +294,16 @@ Indexes: **HNSW** on `embedding` with `vector_cosine_ops` (must match the `<=>` 
 | Casually worded question (vocabulary mismatch) | Measured: keyword hit@5 5/15, hybrid 10/15, vector 14/15 → the pipeline uses vector (D28) |
 | Model gives the wrong passage number for a real quote | Citation invalid → refusal if none is left; not re-mapped (D31, q17) |
 | Selective document filter on a large corpus | HNSW filters after the index scan → possibly fewer than k rows (D20); not an issue at 99 chunks |
+| Change that makes retrieval worse (chunking, embeddings, SQL, corpus, eval set) | CI `retrieval-gate` fails: hit@5 < 28/30, MRR@10 < 0.72 or any answerable question refused at gate 1 (D33) ✅ |
+
+## 6. CI (`.github/workflows/ci.yml`)
+
+Three jobs run in parallel on every push and pull request, each on a clean Ubuntu runner with `npm ci`:
+
+| Job | Steps | Needs |
+|---|---|---|
+| `check` | lint (oxlint, type-aware) → format check → build → type-check `scripts/` → unit tests | nothing external |
+| `integration` | integration tests in temporary schemas (D15) | Postgres service (same pinned pgvector image as `docker-compose.yml`), MiniLM download |
+| `retrieval-gate` | `ingest` into a fresh database → `eval:retrieval` → informational `git diff` against the committed results → `eval:gate`; results uploaded as an artifact, also on failure | Postgres service, MiniLM download |
+
+Not in CI: the answer eval and the judge (`eval:answers`), because they need a local LLM; they are run by hand and their results committed under `eval/results/`. Measured on the first CI run: Linux reproduces every retrieval rank of the macOS run; similarity values differ by at most 2.2 × 10⁻⁷ (D33).

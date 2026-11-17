@@ -11,8 +11,8 @@ Status legend: ⬜ not started · 🟨 in progress · ✅ merged
 | 1 — Ingestion | `feat/ingestion` | ✅ |
 | 2 — Retrieval | `feat/retrieval` | ✅ |
 | 3 — Answering | `feat/answering` | ✅ |
-| 4 — Evaluation | `feat/evaluation` | 🟨 (built, awaiting merge) |
-| 5 — CI, docs, polish | `chore/ci-docs-polish` | ⬜ |
+| 4 — Evaluation | `feat/evaluation` | ✅ |
+| 5 — CI, docs, polish | `chore/ci-docs-polish` | 🟨 (built, awaiting merge) |
 
 ---
 
@@ -100,12 +100,12 @@ Status legend: ⬜ not started · 🟨 in progress · ✅ merged
 
 **Goal:** a finished, defensible repo.
 
-- CI: lint, build, unit tests, integration tests (Postgres service), retrieval eval as a gate (fails if hit@5 drops below the threshold set from the baseline)
+- CI: lint, build, unit tests, integration tests (Postgres service), retrieval eval as a gate: fails if the `/ask` retriever drops below hit@5 28/30 or MRR@10 0.72, or refuses an answerable question at gate 1 (baseline minus one question of slack, D33)
 - The LLM eval is not part of normal CI (it needs a running model)
 - `README.md`: problem, architecture diagram, quickstart, API examples with real responses, results table, limitations, not-legal-advice note
 - Quickstart tested from a fresh clone
 
-**Done when:** a fresh clone works with only the documented commands and CI is green.
+**Done when:** a fresh clone works with only the documented commands and CI is green. ✅ Verified: a clean clone with a new database volume ran every README command (install, ingest, search, ask, API, evals, unit + integration tests, lint) and reproduced `eval/results/` byte for byte; the gate was shown to fail (exit 1) when a limit is raised above the baseline; CI green with all three jobs (run 44113740033), and Linux reproduced every macOS retrieval rank. Not tested from scratch: `ollama pull` (model already present).
 
 ### Optional (only if time remains and Omri agrees)
 

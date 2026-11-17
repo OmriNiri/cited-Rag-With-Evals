@@ -282,7 +282,7 @@ One entry per decision: context, options considered, choice, trade-off. New entr
   | 0.45 | 7/30 | 1/10 |
 
 - **Choice:** keep 0.35, the highest value with no false refusal. A gate-1 refusal is final (the model never sees the question), while an unanswerable question that passes still meets gates 2–3. End to end, gates 2–3 refused 4 of the 5 that passed; only q40 was answered.
-- **Failure modes:** the margin is thin — the lowest answerable question scores 0.366 (q28), the highest blocked unanswerable 0.329 (q37). A slightly different casual question could fall under 0.35, and raising the threshold to 0.40 would refuse 4 real casual questions to block 2 more out-of-scope ones. Cosine similarity measures "same topic", not "answered by the text": q40 (salary change without agreement) scores 0.552, higher than most answerable questions, so no threshold could block it.
+- **Failure modes:** the margin is thin — the lowest answerable question scores 0.366 (q28), the highest blocked unanswerable 0.329 (q37). A slightly different casual question could fall under 0.35, and raising the threshold to 0.40 would refuse 4 real casual questions to block 2 more out-of-scope ones. Cosine similarity measures "same topic", not "answered by the text": q40 (salary change without agreement) scores 0.552, higher than 12 of the 30 answerable questions; the sweep only blocks it at 0.60, which refuses 14/30 answerable questions.
 - **Top-k = 5:** vector hit@3 = 27/30, hit@5 = 29/30, hit@10 = 30/30; the only question that k = 10 would add is q05 (gold at rank 9). Other k values were **not** run end to end; 5 is kept because it covers 29/30 at half the prompt length of 10 (and prompt length is the main cost of the local model's time per answer).
 - **Caveat:** the threshold was chosen on the same 40 questions it is reported on, so the 0/30 is optimistic for new questions.
 
@@ -314,3 +314,23 @@ One entry per decision: context, options considered, choice, trade-off. New entr
   - the same set was used to choose the retriever and threshold and to report them — no held-out set;
   - one corpus (Swiss CO Art. 319–343, English), one answer model, one judge that is the same model;
   - questions written by the agent, not by real users; "casual" wording is the agent's idea of casual.
+
+## D33 — CI retrieval-quality gate with one question of slack
+
+- **What it checks** (`npm run eval:gate`, limits in `src/evaluation/gate/gate.config.ts`), for the retriever `/ask` uses (`ANSWER_RETRIEVAL_MODE`, vector), on the 30 answerable questions:
+
+  | Check | Baseline (Phase 4) | Limit |
+  |---|---|---|
+  | hit@5 | 29/30 | ≥ 28/30 |
+  | MRR@10 | 0.754 | ≥ 0.72 |
+  | Answerable questions refused by gate 1 at 0.35 | 0/30 | ≤ 0 |
+  | Answerable questions in the set | 30 | = 30 |
+
+- **How it runs:** CI job `retrieval-gate` — Postgres service → `npm run ingest` (fresh database) → `npm run eval:retrieval` → `npm run eval:gate`, which exits 1 if any check fails. The measured results are uploaded as a build artifact, also on failure. No LLM is needed, so it runs on every push.
+- **Why these checks:** they cover what a code change can silently break before the model is involved — chunking, embedding text, SQL, the corpus, the eval set. The gate follows `ANSWER_RETRIEVAL_MODE`, so switching `/ask` back to hybrid (25/30) fails the build until the decision and the limits are revisited.
+- **Why one question of slack on hit@5 and MRR:** development is on macOS, CI on Linux; the embedding model's floating-point results can differ slightly between platforms and move a rank by one. One question = 1/30 hit@5 and up to 0.033 MRR. No slack on gate-1 false refusals: a refusal there is final for the user.
+- **Why "= 30 questions":** limits are counts; adding or removing eval questions must update the gate on purpose, not silently change what 28 means.
+- **Verified:** locally, `eval:retrieval` reproduces the committed results byte for byte and the gate passes; with `minHitsAt5` temporarily set to 30 it prints `FAIL hit@5` and exits 1.
+- **Linux vs macOS, measured (first CI run, 44109467825):** every rank was identical — `retrieval.json`, `retrieval.md` and `threshold.md` matched the committed files exactly. Only `threshold.json` differed: the 40 similarity values by at most 2.2 × 10⁻⁷, far below anything that could move a rank or cross the 0.35 threshold (closest question: 0.366). So the slack was not needed on this run; it stays as cheap insurance against a future runtime or library update.
+- **Rejected:** require results identical to the committed files (too brittle across platforms); gate on all three retrievers (keyword and hybrid are not used by `/ask`, so their drops are not regressions of the product); run the LLM eval in CI (needs a model; slow and not deterministic across machines).
+- **Limit:** the gate can only see what the 40 questions cover, and the same set chose the retriever (D32).
