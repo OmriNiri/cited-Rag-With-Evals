@@ -8,3 +8,10 @@ export const EVAL_DEPTH = 10;
 export const EVAL_KS = [1, 3, 5, 10] as const;
 
 export const RESULTS_DIR = 'eval/results'; // relative to the project root
+
+// Gate-1 thresholds tried by the sweep: 0.20, 0.25, ... 0.60. Built from whole
+// numbers so 0.35 is exactly 0.35 (0.2 + 3 * 0.05 is 0.35000000000000003).
+export const SWEEP_THRESHOLDS = Array.from(
+  { length: 9 },
+  (_, i) => (20 + 5 * i) / 100,
+);
