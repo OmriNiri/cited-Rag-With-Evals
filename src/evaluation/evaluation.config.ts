@@ -15,3 +15,7 @@ export const SWEEP_THRESHOLDS = Array.from(
   { length: 9 },
   (_, i) => (20 + 5 * i) / 100,
 );
+
+// Answers sampled for the blind human check of the judge (Phase 4, step 5).
+export const JUDGE_CHECK_SIZE = 15;
+export const JUDGE_CHECK_PATH = 'eval/JUDGE-CHECK.md'; // human labels: committed, never overwritten

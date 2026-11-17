@@ -65,6 +65,8 @@ npm run ask -- "<question>"     # full pipeline: retrieval -> model -> citation 
 npm run eval:retrieval      # hit@k + MRR per retriever on eval/questions.jsonl -> eval/results/retrieval.{json,md} + gate-1 threshold sweep (no LLM)
 npm run eval:answers -- --mode vector   # full pipeline + LLM judge on all questions -> eval/results/answers-<mode>.* (needs Ollama, minutes)
 npm run eval:answers -- --mode vector --rescore   # re-score the saved run after a label correction (no model)
+npm run eval:judge-sheet     # blind sheet of 15 answers for hand labels -> eval/JUDGE-CHECK.md (never overwrites)
+npm run eval:judge-agreement # human labels vs judge verdicts -> eval/results/judge-agreement.{json,md}
 ```
 
 Update this list whenever a script is added.
