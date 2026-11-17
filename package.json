@@ -28,6 +28,7 @@
     "test:int": "vitest run --config vitest.config.int.ts",
     "ask": "npm run build && node dist/cli/ask.js",
     "eval:retrieval": "npm run build && node dist/cli/eval-retrieval.js",
+    "eval:gate": "npm run build && node dist/cli/eval-gate.js",
     "eval:answers": "npm run build && node dist/cli/eval-answers.js",
     "eval:judge-sheet": "npm run build && node dist/cli/judge-sheet.js",
     "eval:judge-agreement": "npm run build && node dist/cli/judge-agreement.js"
