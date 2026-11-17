@@ -11,3 +11,8 @@ export const MIN_TOP_SIMILARITY = 0.35;
 
 // Chunks given to the model. PROVISIONAL: chosen from eval numbers in Phase 4.
 export const ANSWER_TOP_K = 5;
+
+// Calls per question when the model fails in a way worth retrying (timeout,
+// unreachable, 5xx, malformed JSON): the first try + one retry. More retries
+// would mostly make a user wait longer for the same failure.
+export const LLM_ATTEMPTS = 2;
