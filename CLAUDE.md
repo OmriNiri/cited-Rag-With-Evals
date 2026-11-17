@@ -51,7 +51,7 @@ Business code depends on interfaces; implementations live in `infrastructure/` (
 ```bash
 docker compose up -d        # start PostgreSQL + pgvector (wait for "healthy": docker compose ps)
 cp .env.example .env        # first time only
-npm run start:dev           # API on http://localhost:3000 (GET /health)
+npm run start:dev           # API on http://localhost:3000 (GET /health, POST /ask)
 npm run build               # compile src/ to dist/
 npm run lint                # oxlint, src/ scripts/ test/
 npm run format              # prettier --write   (format:check = verify only, used in CI)
@@ -61,6 +61,7 @@ npm run typecheck:scripts   # type-check scripts/ (not part of the Nest build)
 npm run corpus:build        # re-generate corpus/ from the pinned fedlex source
 npm run ingest              # build, then chunk + embed corpus/ into the chunks table (idempotent)
 npm run search -- "<question>" --mode all   # compare vector / keyword / hybrid top-k (--k, --document)
+npm run ask -- "<question>"     # full pipeline: retrieval -> model -> citation check -> answer or refusal
 ```
 
 Update this list whenever a script is added.
