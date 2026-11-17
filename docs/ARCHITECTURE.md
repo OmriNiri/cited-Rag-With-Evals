@@ -1,6 +1,6 @@
 # Architecture
 
-> **Status: Phase 2 built** (setup, ingestion, and retrieval: vector, keyword and hybrid search, `npm run search`). Each section is updated as its phase is built; anything not built yet is marked _(planned)_.
+> **Status: Phase 3 built** (setup, ingestion, retrieval, and answering: `POST /ask` and `npm run ask` with verified citations and refusals). Each section is updated as its phase is built; anything not built yet is marked _(planned)_.
 
 ## 1. What the system does
 
@@ -59,10 +59,15 @@ flowchart LR
 | `reciprocalRankFusion` | Pure function, ~20 lines: `Σ 1/(60 + rank)`, deterministic ties (D18) | 2 ✅ |
 | `Retriever` (interface) + Vector / Keyword / Hybrid retrievers | Same call for all three; `RETRIEVERS` registry to pick or loop by name | 2 ✅ |
 | `npm run search` | CLI: show one or all three retrievers' top-k for a question | 2 ✅ |
-| Prompt builder | Number the passages and state the answering rules | 3 _(planned)_ |
-| `LlmClient` | Call the model over an OpenAI-compatible HTTP API; retry once | 3 _(planned)_ |
-| Citation validator | Deterministic check that each quote is verbatim in its chunk | 3 _(planned)_ |
-| Refusal policy | Refuse on low retrieval score or model-reported insufficiency | 3 _(planned)_ |
+| `LlmClient` (interface) + `OpenAiCompatibleClient` | `POST {LLM_BASE_URL}/chat/completions`, temperature 0, JSON schema requested, timeout; every failure becomes an `LlmError` marked retryable or not (D27) | 3 ✅ |
+| `LlmModule` | Reads and validates the `LLM_*` settings, binds `LLM_CLIENT` (D22) | 3 ✅ |
+| Prompt builder | System rules + passages numbered `[1]..[n]` + the question last (D23) | 3 ✅ |
+| Model-answer parser | Strips code fences / `<think>`, checks the JSON shape by hand; malformed → retryable error | 3 ✅ |
+| `completeWithRetry` | Call + parse, at most 2 attempts, only for retryable errors (D27) | 3 ✅ |
+| Citation validator | Pure: passage number → chunk; ≥ 4 words; normalised quote must be in the chunk text (D24) | 3 ✅ |
+| Refusal policy | Pure: gate 1 (vector similarity < 0.35), gate 2 (model refused), gate 3 (no valid citation) (D25) | 3 ✅ |
+| `AnswerService` | Connects the answering pipeline; used by both the API and the CLI | 3 ✅ |
+| `POST /ask` + `npm run ask` | HTTP endpoint (400 / 200 / 503) and CLI over the same service | 3 ✅ |
 | Eval runner | Compute metrics and write results files | 4 _(planned)_ |
 
 ### 2.1 Code layout (D10)
@@ -74,6 +79,7 @@ src/
   cli/                             command-line entry points (Nest without a web server)
     ingest.ts                      `npm run ingest`
     search.ts                      `npm run search` (+ parse-search-args, format-hits)
+    ask.ts                         `npm run ask` (+ parse-ask-args, format-answer)
   health/health.controller.ts      GET /health
   ingestion/                       BUSINESS LOGIC
     load-documents.ts              corpus/*.txt -> SourceDocument[]
@@ -87,13 +93,24 @@ src/
     database/                      pool, schema.sql, apply-schema, ChunksRepository (write),
                                    ChunksSearchRepository (read)
     embeddings/                    MiniLmEmbedder, EmbeddingsModule
+    llm/                           readLlmConfig, OpenAiCompatibleClient, LlmModule
   retrieval/                       BUSINESS LOGIC
     retriever.ts                   INTERFACE Retriever + RETRIEVERS registry
     chunk-search.ts                INTERFACE ChunkSearch (+ CHUNK_SEARCH token)
     vector / keyword / hybrid .retriever.ts
     rrf.ts                         reciprocal rank fusion
     retrieval.config.ts            DEFAULT_TOP_K = 5, HYBRID_CANDIDATES = 20 (provisional)
-  answering/                       (planned)
+  answering/                       BUSINESS LOGIC
+    llm-client.ts, llm-error.ts    INTERFACE LlmClient (+ LLM_CLIENT token), LlmError(retryable)
+    model-answer.ts                what the model must return + its JSON schema
+    system-prompt.ts, build-prompt.ts   rules + numbered passages
+    parse-model-answer.ts          raw reply -> ModelAnswer (or retryable error)
+    complete-with-retry.ts         call + parse, one retry
+    normalize-for-match.ts, validate-citations.ts   verbatim check
+    refusal-policy.ts              the three gates
+    answer.service.ts              the pipeline
+    ask.controller.ts, parse-ask-body.ts   POST /ask
+    answering.config.ts            MIN_TOP_SIMILARITY, ANSWER_TOP_K, MIN_QUOTE_WORDS, ... (some provisional)
 test/                              integration tests (*.int-spec.ts) + helpers
 scripts/corpus/                    build-corpus.ts -> download / parse-articles / render-text
 corpus/                            co-individual-employment-contract.txt, SOURCES.md
@@ -106,8 +123,10 @@ Rule: business code depends on interfaces; `infrastructure/` implements them; Ne
 ```
 main.ts → NestFactory.create(AppModule)
   → ConfigModule loads .env → validateEnv() → throws listing every invalid variable
+      (checks DATABASE_URL + PORT, passes every other variable through — D22)
   → DatabaseModule builds one pg Pool from DATABASE_URL
-  → HealthController receives the pool via @Inject(PG_POOL)
+  → LlmModule → readLlmConfig() → throws if LLM_MODEL / LLM_BASE_URL are invalid (D22)
+  → HealthController receives the pool via @Inject(PG_POOL); AskController receives AnswerService
   → app.listen(PORT)
 SIGTERM / Ctrl+C → enableShutdownHooks → DatabaseModule.onApplicationShutdown → pool.end()
 ```
@@ -153,21 +172,29 @@ retrieve(question, { limit, document? })
 
 Scores are only comparable within one mode. All SQL values are bound parameters. `npm run search -- "<question>" --mode all` prints the three side by side; quality is measured in Phase 4, not judged from single questions (see the observation recorded in D18).
 
-### 3.3 Answering a question _(planned)_
+### 3.3 Answering a question (built)
 
 ```
-POST /ask { question }
-  → embed question
-  → retrieve top-k (hybrid by default)
-  → best score below threshold?  → refuse (no model call)
-  → build prompt with numbered passages
-  → model returns JSON { answer, citations[], refused }
-  → validate JSON shape (retry once if malformed)
-  → validate each citation verbatim against its chunk
-  → response: answer + citations (each marked valid/invalid) + refused flag
+POST /ask {"question": "..."}          or   npm run ask -- "<question>"
+  → parseAskBody: non-empty string, ≤ 500 chars, trimmed          else 400
+  → AnswerService.ask(question)
+      vector top 1 → similarity < 0.35?          → refuse low_retrieval_score   (gate 1, no model call)
+      hybrid top 5 → buildPrompt: system rules + [1]..[5] passages + question
+      completeWithRetry (≤ 2 attempts):
+          OpenAiCompatibleClient → Ollama (llama3.1:8b, temperature 0, JSON schema)
+          parseModelAnswer → { answer, citations: [{ passage, quote }], refused }
+      model refused / empty answer?              → refuse model_insufficient_context (gate 2)
+      validateCitations: passage → chunk id, ≥ 4 words, normalised quote ⊂ chunk text
+      no valid citation?                         → refuse no_valid_citation       (gate 3)
+  → 200 { refused, refusalReason?, answer, citations: [{ passage, chunkId, article, quote, valid, invalidReason? }] }
+  → model still failing after the retry           → 503 (reason in the server log only)
 ```
 
-Rule: an answer with no valid citation is never returned as a factual answer.
+Rule: an answer with no valid citation is never returned as a factual answer. Invalid citations are returned flagged, never hidden.
+
+Examples (real runs through `AnswerService` with Postgres and llama3.1:8b): "How many weeks of holiday does an employee get per year?" → answered, citing Art. 329a word for word ("…at least four weeks’ holiday and five weeks’ holiday for employees under the age of 20."). "How do I bake sourdough bread?" → refused at gate 1.
+
+**Known limitation:** the verbatim check proves a quote exists, not that it supports the answer — two real examples in D26. Faithfulness is measured in Phase 4.
 
 ### 3.4 Evaluation _(planned)_
 
@@ -202,10 +229,14 @@ Indexes: **HNSW** on `embedding` with `vector_cosine_ops` (must match the `<=>` 
 |---|---|
 | Missing / invalid env variable | App refuses to start; error lists every problem ✅ |
 | Database unreachable | Pool gives up after 2 s; `/health` returns 503 instead of hanging ✅ |
-| Model unreachable / timeout | Retry once, then a clear error response _(planned)_ |
-| Malformed JSON from the model | Retry once, then a clear error response _(planned)_ |
-| Quote not found in cited chunk | Citation marked invalid in the response _(planned)_ |
-| Question outside the corpus | Refusal via score threshold or model signal _(planned)_ |
+| Model unreachable / timeout / HTTP 5xx | Retry once, then `POST /ask` → 503; reason in the server log (D27) ✅ |
+| Model rejects the request (401, 404 unknown model) | No retry (will not fix itself) → 503 ✅ |
+| Malformed JSON from the model | Retry once, then 503 ✅ |
+| `LLM_MODEL` / `LLM_BASE_URL` missing or invalid | API and `npm run ask` refuse to start; ingest and search are unaffected (D22) ✅ |
+| Quote not found in cited chunk, too short, or unknown passage number | Citation marked invalid with the reason; no valid citation at all → refusal (gate 3) ✅ |
+| Question outside the corpus | Gate 1 (similarity < 0.35, no model call) or gate 2 (model refuses) ✅ — threshold provisional (D25) |
+| Empty `chunks` table | Every question refused at gate 1 instead of crashing ✅ |
+| Real quote attached to a wrong / off-topic answer | **Not caught** by the verbatim check (D24, D26 examples); measured by the faithfulness judge in Phase 4 |
 | Chunk longer than the embedder's input window | Prevented by the 250-token limit (D7); if a single sentence were still too long, ingestion logs a warning ✅ |
 | Ingestion fails halfway (DB error, crash) | Transaction rolls back; previous chunks stay intact; command exits non-zero ✅ |
 | No corpus files found | Ingestion stops with a clear error instead of emptying the table ✅ |

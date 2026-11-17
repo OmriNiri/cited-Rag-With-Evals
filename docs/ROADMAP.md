@@ -10,7 +10,7 @@ Status legend: ⬜ not started · 🟨 in progress · ✅ merged
 | 0 — Setup | `chore/project-setup` | ✅ |
 | 1 — Ingestion | `feat/ingestion` | ✅ |
 | 2 — Retrieval | `feat/retrieval` | ✅ |
-| 3 — Answering | `feat/answering` | ⬜ |
+| 3 — Answering | `feat/answering` | 🟨 |
 | 4 — Evaluation | `feat/evaluation` | ⬜ |
 | 5 — CI, docs, polish | `chore/ci-docs-polish` | ⬜ |
 
@@ -70,21 +70,23 @@ Status legend: ⬜ not started · 🟨 in progress · ✅ merged
 
 **Goal:** `POST /ask` returns a cited answer, or refuses.
 
-- `LlmClient` interface, implemented by an OpenAI-compatible HTTP client (local Ollama by default)
-- Prompt: numbered passages; answer only from them; cite passage ids; say so if they are insufficient
-- Output JSON: `{ answer, citations: [{ chunkId, quote }], refused }`
-- Deterministic citation validator: each quote must appear verbatim in its cited chunk; invalid citations are flagged in the response
-- Refusal when retrieval scores are below a threshold (tuned in Phase 4) or the model reports insufficient context; never return an uncited answer
-- Error handling: timeouts, API errors, malformed JSON → retry once, then fail clearly
-- Tests: prompt builder and validator unit tests; LLM mocked
+- `LlmClient` interface, implemented by an OpenAI-compatible HTTP client (local Ollama by default); LLM settings validated by `LlmModule` only (D22)
+- Model chosen by comparing `llama3.1:8b` and `qwen3:8b` on 10 questions through the real pipeline → `llama3.1:8b` (D26)
+- Prompt: numbered passages; answer only from them; cite passage numbers, which code maps to chunk ids (D23)
+- Model output JSON: `{ answer, citations: [{ passage, quote }], refused }`, parsed and shape-checked by hand
+- Deterministic citation validator: quote ≥ 4 words and verbatim in its chunk after minimal normalisation (D24); invalid citations are flagged in the response
+- Three refusal gates (D25): vector similarity < 0.35 (provisional, no model call), model refusal, no valid citation; never an uncited answer
+- Errors: retryable failures (timeout, unreachable, 5xx, malformed JSON) retried once, then 503 (D27)
+- `POST /ask` and `npm run ask` over the same `AnswerService`
+- Tests: 115 unit tests in total, none needing a model or database (LLM mocked by `FakeLlmClient`); HTTP tests for 200 / 400 / 503 / 500; a wiring test for `.env` → `LlmModule` that found a real bug (D22)
 
-**Done when:** `/ask` works end to end against the local model, and the unit tests pass without a model running.
+**Done when:** `/ask` works end to end against the local model, and the unit tests pass without a model running. ✅ Verified against the running API with llama3.1:8b: cited answer (200), out-of-scope refusal (200), bad body (400), model unreachable (503 after the retry). Known limitation recorded: a real quote can back a wrong answer (D26) — measured in Phase 4.
 
 ## Phase 4 — Evaluation — `feat/evaluation`
 
 **Goal:** measured quality, not assumed quality.
 
-- `eval/questions.jsonl`: 40 questions, 30 answerable (with gold article) and 10 unanswerable; mix casual and legal wording (D18 hypothesis)
+- `eval/questions.jsonl`: 40 questions, 30 answerable (with gold article) and 10 unanswerable; mix casual and legal wording (D18 hypothesis); include the two known faithfulness failures from D26
 - The agent drafts candidates; **Omri verifies every gold reference against the source text**
 - `npm run eval`:
   - Retrieval: hit@5 and MRR for vector vs keyword vs hybrid

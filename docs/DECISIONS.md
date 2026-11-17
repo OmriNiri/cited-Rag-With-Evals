@@ -39,7 +39,7 @@ One entry per decision: context, options considered, choice, trade-off. New entr
 - **Choice:** local model via Ollama. The app talks to it through one `LlmClient` that uses the **OpenAI-compatible** chat API, configured by `LLM_BASE_URL`, `LLM_API_KEY` and `LLM_MODEL`.
 - **Why:** anyone can run the full project without an account. Because Ollama and most hosted providers expose the same API format, switching to a hosted model is a configuration change, not a code change.
 - **Trade-off:** a small model follows JSON and verbatim-quote instructions less reliably, and is a weaker judge. Mitigations: JSON-schema output where the server supports it, retry once on malformed output, a deterministic citation validator, a strict judge rubric, and manual spot-checks of judge verdicts. Results will be lower than with a frontier model, and are reported as measured.
-- **Exact model:** chosen in Phase 3 by trying two candidates on a few questions.
+- **Exact model:** `llama3.1:8b`, chosen in Phase 3 by comparing two candidates on 10 questions (D26).
 
 ## D5 — Database access: `pg` with hand-written SQL, no ORM
 
@@ -178,3 +178,61 @@ One entry per decision: context, options considered, choice, trade-off. New entr
 - **Choice:** `applySchema` runs in one transaction that first takes `pg_advisory_xact_lock(<fixed key>)`. Concurrent callers wait their turn; the second one then sees the extension and skips it. The lock is tied to the transaction, so it is released on COMMIT or ROLLBACK and cannot leak.
 - **Why:** fixes the cause, not the symptom — the same race would hit two `npm run ingest` processes started at once on a new database.
 - **Verified:** 5/5 passing runs on a fresh database after the fix (0/5 before).
+
+## D22 — LLM settings are validated by `LlmModule`, not at app startup
+
+- **Options:** add `LLM_*` to the startup validation (`validateEnv`); validate them where they are used.
+- **Choice:** `validateEnv` checks only what every process needs (`DATABASE_URL`, `PORT`) and **passes all other variables through unchanged**. `LlmModule` reads `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_TIMEOUT_MS` through `ConfigService` and validates them in `readLlmConfig`, listing every problem at once.
+- **Why:** `npm run ingest` and `npm run search` never call a model and should not fail because `LLM_MODEL` is empty. Processes that do answer questions (`POST /ask`, `npm run ask`) still fail at startup, not at the first question.
+- **Bug found while wiring it (Phase 3):** `@nestjs/config` keeps **only the keys that the `validate` function returns**. The first `validateEnv` returned just `{ DATABASE_URL, PORT }`, so the `LLM_*` lines of `.env` were silently dropped and the API failed with "LLM_MODEL is required". Unit tests did not catch it because no test loaded a real `.env` file. Fix: return `{ ...raw, DATABASE_URL, PORT }`. Guarded by `llm.module.spec.ts` (temporary `.env` file → `validateEnv` → `LlmModule`), which failed before the fix.
+
+## D23 — The model cites passage numbers; code maps them to chunk ids
+
+- **Options:** show chunk ids (`co-individual-employment-contract:art-335c:0`) and let the model copy them; number the passages `[1]..[n]` and let the model cite the number.
+- **Choice:** numbers. Passage `[i]` in the prompt is `hits[i - 1]`; `validateCitations` maps the number back to the chunk id. A number that was not shown is flagged `unknown_passage`.
+- **Why:** a short number is much harder for a small model to garble than a long id, and the mapping is done by code that is unit-tested, not trusted to the model.
+- **Trade-off:** the response shows both: `passage` (what the model said) and `chunkId` (what code resolved), so a wrong number is visible.
+
+## D24 — What "verbatim" means for a citation
+
+- **Rule:** after normalising both sides, the quote must be a **substring of the cited chunk's stored text** (not of its heading) and have **at least 4 words**.
+- **Normalisation — only differences that change no word:** typographic → plain characters (`’ ‘` → `'`, `“ ”` → `"`, `– —` → `-`); any whitespace run incl. line breaks → one space; trim; drop a trailing `. , ; :`.
+- **Not normalised:** case, word order, spelling, any other punctuation. A different capital letter means the text was not copied exactly.
+- **Why:** the corpus uses typographic apostrophes (`month’s`) and models usually write `'`; without this, correct quotes would fail. Everything beyond that would start accepting paraphrases.
+- **Why ≥ 4 words:** a quote like "the employer" appears in almost every chunk and proves nothing.
+- **Options rejected:** fuzzy matching (edit distance / similarity threshold) — accepts paraphrases and needs its own tuning; case-insensitive matching — little gain, weaker guarantee.
+- **Limitation (measured, see D26):** the check proves the quote **exists** in the chunk, not that it **supports** the answer. That is measured by the faithfulness judge in Phase 4.
+
+## D25 — Three refusal gates; similarity threshold 0.35 (provisional)
+
+- **Gate 1 — before the model:** if the best **vector** cosine similarity is below `MIN_TOP_SIMILARITY` (0.35), refuse with `low_retrieval_score` and do not call the model. The vector score is used because it has a fixed meaning; the hybrid (RRF) score only encodes ranks. An empty table counts as similarity 0.
+- **Gate 2 — the model:** the model sets `refused: true` (or returns an empty answer) → `model_insufficient_context`.
+- **Gate 3 — after validation:** no citation survived the verbatim check (D24) → `no_valid_citation`; the rejected citations are still returned so the reason is visible. An answer with at least one valid citation is returned, with any invalid ones flagged.
+- **Threshold data (10 hand-picked questions, Phase 3):** top vector similarity of 5 in-scope questions 0.43 / 0.64 / 0.65 / 0.67 / 0.70; of 5 out-of-scope questions 0.14 / 0.21 / 0.25 / 0.27 / 0.42. The ranges overlap ("How much unemployment insurance will I receive?" = 0.42, "Can my employer fire me while I am sick?" = 0.43), so no threshold separates them perfectly.
+- **Choice:** 0.35 — blocks clearly unrelated questions without a model call, and leaves borderline ones to gates 2–3 (in the model comparison, the 0.42 question was refused by gate 2).
+- **Status:** provisional. Phase 4 chooses the value from the 40-question eval set and records the trade-off (false refusals vs answered out-of-scope questions).
+- **A refusal is a normal result:** `POST /ask` returns 200 with `refused: true` and the reason, not an error status.
+
+## D26 — Answer model: `llama3.1:8b`
+
+- **Candidates:** `qwen3:8b` and `llama3.1:8b` (both 8B, Q4_K_M, ~5 GB, run by Ollama 0.40.16 on the development laptop).
+- **Method (model selection, not the final eval):** the same 10 questions as D25 through the real pipeline pieces — hybrid top 5 → `buildPrompt` → `OpenAiCompatibleClient` (temperature 0, JSON schema requested) → `parseModelAnswer` → `validateCitations` → gates 2–3. To test gate 2, the model was called for the out-of-scope questions too, even where gate 1 would have refused. One warm-up call per model, so load time is not counted. One-off script, not committed; Phase 4 measures the chosen model properly.
+
+  | | llama3.1:8b | qwen3:8b |
+  |---|---|---|
+  | Valid JSON | **10/10** | 9/10 |
+  | In-scope questions answered with a valid citation | **5/5** | 4/5 |
+  | Citations passing the verbatim check | 5/5 | 4/4 |
+  | Out-of-scope questions refused by the model | 5/5 | 5/5 |
+  | Seconds per answer (min / median / max) | **5.9 / 7.6 / 16.1** | 16.8 / 18.8 / 29.6 |
+  | Failures | none | no reply within 300 s on "Can my employer fire me while I am sick?" (cause not investigated) |
+
+- **Choice:** `llama3.1:8b` — fully reliable JSON, no hangs, about 2–3× faster. `qwen3` put no `<think>` text into the reply content, so the parser's stripping was not needed by either.
+- **Observed limitation (both models, not only the chosen one):** a **real quote can back a wrong or off-topic answer**. "Can my employer fire me while I am sick?" — retrieval missed Art. 336c (the D18 casual-wording weakness) and llama answered "No, the employer must provide care…", quoting Art. 328a correctly. "Can an employer change my salary without my agreement?" — answered with a correct quote from Art. 323b (salary used for the employer's benefit), which does not answer the question. Both citations pass D24. Both questions go into the Phase 4 eval set so the faithfulness metric is checked on known failures.
+
+## D27 — Model errors: retry once, then 503
+
+- **Choice:** `completeWithRetry` makes at most 2 attempts (`LLM_ATTEMPTS`). Calling and parsing are retried together, so a malformed reply is retried like a timeout. Only errors the client marks **retryable** are retried: timeout, unreachable server, HTTP 5xx / 429, non-JSON body, missing content, malformed answer JSON. A 4xx such as 401 or 404 fails at once — it will not fix itself.
+- **After the retry:** `POST /ask` returns **503** ("try again later"); the real reason goes to the server log only, so internal addresses are not shown to clients. Bad input → 400. Any other error (bug, database) → 500.
+- **Why only one retry:** with a local model, a second failure usually means the server is down or the question reliably breaks the model; more retries mostly make the user wait longer (each attempt can take up to `LLM_TIMEOUT_MS`, default 60 s).
+- **Verified:** with `LLM_BASE_URL` pointing at a closed port, `POST /ask` returned 503 and the log showed "Model failed after retry: LLM server unreachable…".
