@@ -1,11 +1,11 @@
 # Eval set verification
 
-Every question in `eval/questions.jsonl` was drafted by the coding agent and checked by hand against the law text below.
+Every question in `eval/questions.jsonl` was drafted by the coding agent, checked by hand by Omri against the law text below, and re-checked independently by the agent (unanswerable questions: keyword search over the whole corpus, see the end of this file).
 
 - **Answerable:** the gold article(s) really answer the question. Tick the box, or write a correction.
 - **Unanswerable:** no article in Art. 319–342 answers the question. Tick the box, or name the article that does.
 
-Verified by: Omri Niri, date: ____________
+Verified by: Omri Niri, date: 17.11.2026
 
 ## q01 — answerable · legal
 
@@ -19,7 +19,7 @@ Verified by: Omri Niri, date: ____________
 3 If the employer terminates the employment relationship and if the employee is entitled to parental leave in accordance with Article 329g before the end of the employment relationship, the period of notice of termination shall be extended by the number of days of paternity leave not yet taken.
 ```
 
-- [ ] Gold article(s) answer the question
+- [x] Gold article(s) answer the question
 
 ## q02 — answerable · casual
 
@@ -33,7 +33,7 @@ Verified by: Omri Niri, date: ____________
 3 If the employer terminates the employment relationship and if the employee is entitled to parental leave in accordance with Article 329g before the end of the employment relationship, the period of notice of termination shall be extended by the number of days of paternity leave not yet taken.
 ```
 
-- [ ] Gold article(s) answer the question
+- [x] Gold article(s) answer the question
 
 ## q03 — answerable · legal
 
@@ -46,7 +46,7 @@ Verified by: Omri Niri, date: ____________
 3 Where an employee has not yet completed one year’s service, his holiday entitlement is fixed pro rata.
 ```
 
-- [ ] Gold article(s) answer the question
+- [x] Gold article(s) answer the question
 
 ## q04 — answerable · casual
 
@@ -59,7 +59,7 @@ Verified by: Omri Niri, date: ____________
 3 Where an employee has not yet completed one year’s service, his holiday entitlement is fixed pro rata.
 ```
 
-- [ ] Gold article(s) answer the question
+- [x] Gold article(s) answer the question
 
 ## q05 — answerable · casual
 
@@ -83,7 +83,7 @@ _Note: Known faithfulness failure in Phase 3 (D26): retrieval missed Art. 336c, 
 3 Where a specific end-point, such as the end of a month or working week, has been set for termination of the employment relationship and such end-point does not coincide with the expiry of the resumed notice period, the latter is extended until the next applicable end-point.
 ```
 
-- [ ] Gold article(s) answer the question
+- [x] Gold article(s) answer the question
 
 ## q06 — answerable · legal
 
@@ -105,7 +105,7 @@ _Note: Known faithfulness failure in Phase 3 (D26): retrieval missed Art. 336c, 
 3 Where a specific end-point, such as the end of a month or working week, has been set for termination of the employment relationship and such end-point does not coincide with the expiry of the resumed notice period, the latter is extended until the next applicable end-point.
 ```
 
-- [ ] Gold article(s) answer the question
+- [x] Gold article(s) answer the question
 
 ## q07 — answerable · legal
 
@@ -119,7 +119,7 @@ _Note: Known faithfulness failure in Phase 3 (D26): retrieval missed Art. 336c, 
 3 Where the overtime is not compensated by time off in lieu and unless otherwise agreed in writing or under a standard employment contract or collective employment contract, the employer must compensate the employee for the overtime worked by paying him his normal salary and a supplement of at least one-quarter thereof.
 ```
 
-- [ ] Gold article(s) answer the question
+- [x] Gold article(s) answer the question
 
 ## q08 — answerable · casual
 
@@ -132,7 +132,7 @@ _Note: Known faithfulness failure in Phase 3 (D26): retrieval missed Art. 336c, 
 2 At the employee’s express request the reference must be limited to the nature and duration of the employment relationship.
 ```
 
-- [ ] Gold article(s) answer the question
+- [x] Gold article(s) answer the question
 
 ## q09 — answerable · legal
 
@@ -145,7 +145,7 @@ _Note: Known faithfulness failure in Phase 3 (D26): retrieval missed Art. 336c, 
 2 At the employee’s express request the reference must be limited to the nature and duration of the employment relationship.
 ```
 
-- [ ] Gold article(s) answer the question
+- [x] Gold article(s) answer the question
 
 ## q10 — answerable · legal
 
@@ -159,7 +159,7 @@ _Note: Known faithfulness failure in Phase 3 (D26): retrieval missed Art. 336c, 
 3 Where the period that would normally constitute the probation period is interrupted by illness, accident or performance of a non-voluntary legal obligation, the probation period is extended accordingly.
 ```
 
-- [ ] Gold article(s) answer the question
+- [x] Gold article(s) answer the question
 
 ## q11 — answerable · casual
 
@@ -173,7 +173,7 @@ _Note: Known faithfulness failure in Phase 3 (D26): retrieval missed Art. 336c, 
 3 Where the period that would normally constitute the probation period is interrupted by illness, accident or performance of a non-voluntary legal obligation, the probation period is extended accordingly.
 ```
 
-- [ ] Gold article(s) answer the question
+- [x] Gold article(s) answer the question
 
 ## q12 — answerable · casual
 
@@ -188,7 +188,7 @@ _Note: Known faithfulness failure in Phase 3 (D26): retrieval missed Art. 336c, 
 4 A written agreement, standard employment contract or collective employment contract may derogate from the above provisions provided it gives the employee terms of at least equivalent benefit.
 ```
 
-- [ ] Gold article(s) answer the question
+- [x] Gold article(s) answer the question
 
 ## q13 — answerable · legal
 
@@ -202,7 +202,7 @@ _Note: Known faithfulness failure in Phase 3 (D26): retrieval missed Art. 336c, 
 3 In the event of the death of the other parent during the six months following the birth of the child, a female employee is entitled to two additional weeks of leave; she may take this leave in full weeks or on a day-to-day basis within a period of six months from the day after the death.
 ```
 
-- [ ] Gold article(s) answer the question
+- [x] Gold article(s) answer the question
 
 ## q14 — answerable · casual
 
@@ -218,7 +218,7 @@ _Note: Known faithfulness failure in Phase 3 (D26): retrieval missed Art. 336c, 
 3 The leave may be taken in full weeks or on a day-to-day basis.
 ```
 
-- [ ] Gold article(s) answer the question
+- [x] Gold article(s) answer the question
 
 ## q15 — answerable · casual
 
@@ -232,7 +232,7 @@ _Note: Known faithfulness failure in Phase 3 (D26): retrieval missed Art. 336c, 
 3 Any agreement whereby the employee must bear all or part of such necessary expenses is void.
 ```
 
-- [ ] Gold article(s) answer the question
+- [x] Gold article(s) answer the question
 
 ## q16 — answerable · casual
 
@@ -245,7 +245,7 @@ _Note: Known faithfulness failure in Phase 3 (D26): retrieval missed Art. 336c, 
 2 The employer determines the timing of holidays taking due account of the employee’s wishes to the extent these are compatible with the interests of the business or household.
 ```
 
-- [ ] Gold article(s) answer the question
+- [x] Gold article(s) answer the question
 
 ## q17 — answerable · legal
 
@@ -259,7 +259,7 @@ _Note: Known faithfulness failure in Phase 3 (D26): retrieval missed Art. 336c, 
 3 If while on holiday, the employee carries out paid work for a third party which harms the employer’s legitimate interests, the employer may refuse to pay the salary due for the holidays concerned and may reclaim any salary already paid.
 ```
 
-- [ ] Gold article(s) answer the question
+- [x] Gold article(s) answer the question
 
 ## q18 — answerable · casual
 
@@ -274,7 +274,7 @@ _Note: Known faithfulness failure in Phase 3 (D26): retrieval missed Art. 336c, 
 4 Where it is not released to the employee, the employer must pay him separate, appropriate remuneration to be determined with due regard to all pertinent circumstances and in particular the economic value of the invention or design, the degree to which the employer contributed, any reliance on other staff and on the employer’s facilities, the expenses incurred by the employee and his position in the company.
 ```
 
-- [ ] Gold article(s) answer the question
+- [x] Gold article(s) answer the question
 
 ## q19 — answerable · legal
 
@@ -290,7 +290,7 @@ _Note: Known faithfulness failure in Phase 3 (D26): retrieval missed Art. 336c, 
 4 Moreover, the employer may not transfer the rights arising from an employment relationship to a third party unless otherwise agreed or dictated by the circumstances.
 ```
 
-- [ ] Gold article(s) answer the question
+- [x] Gold article(s) answer the question
 
 ## q20 — answerable · legal
 
@@ -312,7 +312,7 @@ _Note: Known faithfulness failure in Phase 3 (D26): retrieval missed Art. 336c, 
 3 The protection against termination of employment afforded pursuant to paragraph 2 letter b to an employee representative whose mandate has ended as a result of transfer of the employment relationship (Art. 333) continues until such time as the mandate would have expired had such transfer not taken place.
 ```
 
-- [ ] Gold article(s) answer the question
+- [x] Gold article(s) answer the question
 
 ## q21 — answerable · legal
 
@@ -326,7 +326,7 @@ _Note: Known faithfulness failure in Phase 3 (D26): retrieval missed Art. 336c, 
 3 Where termination is unlawful pursuant to Article 336 paragraph 2 letter c, compensation may not exceed two months’ salary for the employee.
 ```
 
-- [ ] Gold article(s) answer the question
+- [x] Gold article(s) answer the question
 
 ## q22 — answerable · casual
 
@@ -340,7 +340,7 @@ _Note: Known faithfulness failure in Phase 3 (D26): retrieval missed Art. 336c, 
 3 The court may order the employer to pay the employee an amount of compensation determined at the court’s discretion taking due account of all circumstances; however, compensation may not exceed the equivalent of six months’ salary for the employee.
 ```
 
-- [ ] Gold article(s) answer the question
+- [x] Gold article(s) answer the question
 
 ## q23 — answerable · legal
 
@@ -354,7 +354,7 @@ _Note: Known faithfulness failure in Phase 3 (D26): retrieval missed Art. 336c, 
 3 The court determines at its discretion whether there is good cause, However, under no circumstances may the court hold that good cause is constituted by an employee being prevented from working through no fault of his own.
 ```
 
-- [ ] Gold article(s) answer the question
+- [x] Gold article(s) answer the question
 
 ## q24 — answerable · legal
 
@@ -367,7 +367,7 @@ _Note: Known faithfulness failure in Phase 3 (D26): retrieval missed Art. 336c, 
 2 The prohibition of competition is binding only where the employment relationship allows the employee to have knowledge of the employer’s clientele or manufacturing and trade secrets and where the use of such knowledge might cause the employer substantial harm.
 ```
 
-- [ ] Gold article(s) answer the question
+- [x] Gold article(s) answer the question
 
 ## q25 — answerable · casual
 
@@ -380,7 +380,7 @@ _Note: Known faithfulness failure in Phase 3 (D26): retrieval missed Art. 336c, 
 2 The court may at its discretion impose restrictions on an excessive prohibition of competition, taking due account of all the circumstances; in particular it will have due regard to any consideration made by the employer.
 ```
 
-- [ ] Gold article(s) answer the question
+- [x] Gold article(s) answer the question
 
 ## q26 — answerable · casual
 
@@ -402,7 +402,7 @@ _Note: Known faithfulness failure in Phase 3 (D26): retrieval missed Art. 336c, 
 4 The severance allowance is due on termination of the employment relationship, but the due date may be deferred by written individual agreement, standard employment contract or collective employment contract or by court order.
 ```
 
-- [ ] Gold article(s) answer the question
+- [x] Gold article(s) answer the question
 
 ## q27 — answerable · legal
 
@@ -420,7 +420,7 @@ _Note: Known faithfulness failure in Phase 3 (D26): retrieval missed Art. 336c, 
 2 In the event of changes to the contractual elements that are subject to the duty of information pursuant to paragraph 1 during the employment relationship, the employee must be informed of such changes in writing within one month of their entry into force.
 ```
 
-- [ ] Gold article(s) answer the question
+- [x] Gold article(s) answer the question
 
 ## q28 — answerable · casual
 
@@ -433,7 +433,7 @@ _Note: Known faithfulness failure in Phase 3 (D26): retrieval missed Art. 336c, 
 2 The extent of the duty of care owed by the employee is determined by the individual employment contract, taking due account of the occupational risk, level of training and technical knowledge associated with the work as well as the employee’s aptitudes and skills of which the employer was or should have been aware.
 ```
 
-- [ ] Gold article(s) answer the question
+- [x] Gold article(s) answer the question
 
 ## q29 — answerable · casual
 
@@ -445,7 +445,7 @@ _Note: Known faithfulness failure in Phase 3 (D26): retrieval missed Art. 336c, 
 An employee is entitled to paid leave for the time he or she spends caring for a family member or life partner with health problems; however, the leave is limited to no more than three days per event and no more than ten days per year.
 ```
 
-- [ ] Gold article(s) answer the question
+- [x] Gold article(s) answer the question
 
 ## q30 — answerable · legal
 
@@ -458,7 +458,7 @@ An employee is entitled to paid leave for the time he or she spends caring for a
 2 In order to safeguard the personal safety, health and integrity of his employees he must take all measures that are shown by experience to be necessary, that are feasible using the latest technology and that are appropriate to the particular circumstances of the workplace or the household, provided such measures may reasonably be expected of him in the light of each specific employment relationship and the nature of the work.
 ```
 
-- [ ] Gold article(s) answer the question
+- [x] Gold article(s) answer the question
 
 ## q31 — UNANSWERABLE · casual
 
@@ -466,7 +466,7 @@ An employee is entitled to paid leave for the time he or she spends caring for a
 
 _Note: out of domain_
 
-- [ ] No article in the corpus answers this question
+- [x] No article in the corpus answers this question
 
 ## q32 — UNANSWERABLE · casual
 
@@ -474,7 +474,7 @@ _Note: out of domain_
 
 _Note: out of domain_
 
-- [ ] No article in the corpus answers this question
+- [x] No article in the corpus answers this question
 
 ## q33 — UNANSWERABLE · casual
 
@@ -482,7 +482,7 @@ _Note: out of domain_
 
 _Note: out of domain_
 
-- [ ] No article in the corpus answers this question
+- [x] No article in the corpus answers this question
 
 ## q34 — UNANSWERABLE · casual
 
@@ -490,7 +490,7 @@ _Note: out of domain_
 
 _Note: near miss: social insurance law, not in the corpus_
 
-- [ ] No article in the corpus answers this question
+- [x] No article in the corpus answers this question
 
 ## q35 — UNANSWERABLE · casual
 
@@ -498,7 +498,7 @@ _Note: near miss: social insurance law, not in the corpus_
 
 _Note: near miss: immigration law, not in the corpus_
 
-- [ ] No article in the corpus answers this question
+- [x] No article in the corpus answers this question
 
 ## q36 — UNANSWERABLE · casual
 
@@ -506,7 +506,7 @@ _Note: near miss: immigration law, not in the corpus_
 
 _Note: near miss: unemployment insurance law, not in the corpus_
 
-- [ ] No article in the corpus answers this question
+- [x] No article in the corpus answers this question
 
 ## q37 — UNANSWERABLE · casual
 
@@ -514,7 +514,7 @@ _Note: near miss: unemployment insurance law, not in the corpus_
 
 _Note: near miss: Art. 322 mentions salary but sets no amount_
 
-- [ ] No article in the corpus answers this question
+- [x] No article in the corpus answers this question
 
 ## q38 — UNANSWERABLE · legal
 
@@ -522,7 +522,7 @@ _Note: near miss: Art. 322 mentions salary but sets no amount_
 
 _Note: near miss: set by the Labour Act, not the Code of Obligations; Art. 321c covers overtime only_
 
-- [ ] No article in the corpus answers this question
+- [x] No article in the corpus answers this question
 
 ## q39 — UNANSWERABLE · casual
 
@@ -530,12 +530,34 @@ _Note: near miss: set by the Labour Act, not the Code of Obligations; Art. 321c 
 
 _Note: near miss: tax law, not in the corpus_
 
-- [ ] No article in the corpus answers this question
+- [x] No article in the corpus answers this question
 
 ## q40 — UNANSWERABLE · casual
 
 > Can an employer change my salary without my agreement?
 
-_Note: Known faithfulness failure in Phase 3 (D26). Near miss: no article states this; Art. 330b(2) only requires written information about changes. CHECK._
+_Note: Known faithfulness failure in Phase 3 (D26). Near miss: no article states this; Art. 330b(2) only requires written information about changes._
 
-- [ ] No article in the corpus answers this question
+- [x] No article in the corpus answers this question
+  Decision after review: Art. 322(1) says the employer must pay the *agreed* salary, but no article addresses *changing* a salary (330b(2) only requires written notice of changes). Answering from 322 is an inference, so q40 stays unanswerable. Decided on the law text only: the vector run had cited Art. 322, so relabelling it answerable would have raised vector's score after the results were seen.
+
+---
+
+## Agent re-check of the unanswerable questions
+
+Case-insensitive search of `corpus/co-individual-employment-contract.txt` (all 91 articles):
+
+| Question | Searched for | Found | Answers it? |
+|---|---|---|---|
+| q31 capital | capital, Bern | nothing | no |
+| q32 sourdough | bread, bake | nothing | no |
+| q33 VAT | VAT, value added, tax | "tax on the vehicle" (327b); "vat" only inside other words (e.g. "private") | no |
+| q34 retirement age | retire, pension, age of | "retirement benefits" (331d, 331e), ages 20/30/50 (329a, 329e, 331e) | no — no retirement age |
+| q35 work permit | permit, residence, immigra, foreign | "permitted" (329, 331d, 335a) | no |
+| q36 unemployment insurance | unemploy, insurance | no "unemploy"; insurance replacing salary (324b), pensions (331–331e) | no |
+| q37 minimum wage | minimum, wage | "time wage" (319); salary must be "agreed or customary" (322) | no — no amount |
+| q38 max weekly hours | hours, working week, per week | overtime (321c), one day off per week (329), length of the working week must be stated (330b) | no — no maximum |
+| q39 income tax | income, deduct | "salary income" (324b), pension contributions deducted (331) | no |
+| q40 salary change | salary, agreed, change, reduc, amend | 322(1) agreed salary; 330b(2) changes notified in writing | ambiguous — kept unanswerable (decision above) |
+
+Answerable questions whose correct answer is conditional (gold article still correct): q11 (only during probation), q12 (only after 3 months' employment, 324a(1)), q26 (may be reduced on resignation without good cause, 339c(3)), q28 (liable only if wilful or negligent, 321e(1)).
