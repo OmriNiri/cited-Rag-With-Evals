@@ -1,0 +1,472 @@
+{
+  "settings": {
+    "depth": 10,
+    "ks": [
+      1,
+      3,
+      5,
+      10
+    ]
+  },
+  "summary": {
+    "vector": {
+      "all": {
+        "questions": 30,
+        "hitAt": {
+          "1": 0.6,
+          "3": 0.9,
+          "5": 0.9666666666666667,
+          "10": 1
+        },
+        "mrr": 0.7537037037037037
+      },
+      "casual": {
+        "questions": 15,
+        "hitAt": {
+          "1": 0.4,
+          "3": 0.8666666666666667,
+          "5": 0.9333333333333333,
+          "10": 1
+        },
+        "mrr": 0.6351851851851851
+      },
+      "legal": {
+        "questions": 15,
+        "hitAt": {
+          "1": 0.8,
+          "3": 0.9333333333333333,
+          "5": 1,
+          "10": 1
+        },
+        "mrr": 0.8722222222222222
+      }
+    },
+    "keyword": {
+      "all": {
+        "questions": 30,
+        "hitAt": {
+          "1": 0.5,
+          "3": 0.6333333333333333,
+          "5": 0.6666666666666666,
+          "10": 0.7333333333333333
+        },
+        "mrr": 0.5658333333333334
+      },
+      "casual": {
+        "questions": 15,
+        "hitAt": {
+          "1": 0.13333333333333333,
+          "3": 0.26666666666666666,
+          "5": 0.3333333333333333,
+          "10": 0.4666666666666667
+        },
+        "mrr": 0.20944444444444446
+      },
+      "legal": {
+        "questions": 15,
+        "hitAt": {
+          "1": 0.8666666666666667,
+          "3": 1,
+          "5": 1,
+          "10": 1
+        },
+        "mrr": 0.9222222222222222
+      }
+    },
+    "hybrid": {
+      "all": {
+        "questions": 30,
+        "hitAt": {
+          "1": 0.5333333333333333,
+          "3": 0.7666666666666667,
+          "5": 0.8333333333333334,
+          "10": 0.9
+        },
+        "mrr": 0.6697619047619049
+      },
+      "casual": {
+        "questions": 15,
+        "hitAt": {
+          "1": 0.26666666666666666,
+          "3": 0.6,
+          "5": 0.6666666666666666,
+          "10": 0.8
+        },
+        "mrr": 0.45619047619047615
+      },
+      "legal": {
+        "questions": 15,
+        "hitAt": {
+          "1": 0.8,
+          "3": 0.9333333333333333,
+          "5": 1,
+          "10": 1
+        },
+        "mrr": 0.8833333333333333
+      }
+    }
+  },
+  "rows": [
+    {
+      "id": "q01",
+      "wording": "legal",
+      "goldArticles": [
+        "Art. 335c"
+      ],
+      "ranks": {
+        "vector": 2,
+        "keyword": 2,
+        "hybrid": 2
+      }
+    },
+    {
+      "id": "q02",
+      "wording": "casual",
+      "goldArticles": [
+        "Art. 335c"
+      ],
+      "ranks": {
+        "vector": 2,
+        "keyword": 1,
+        "hybrid": 1
+      }
+    },
+    {
+      "id": "q03",
+      "wording": "legal",
+      "goldArticles": [
+        "Art. 329a"
+      ],
+      "ranks": {
+        "vector": 1,
+        "keyword": 1,
+        "hybrid": 1
+      }
+    },
+    {
+      "id": "q04",
+      "wording": "casual",
+      "goldArticles": [
+        "Art. 329a"
+      ],
+      "ranks": {
+        "vector": 2,
+        "keyword": 3,
+        "hybrid": 2
+      }
+    },
+    {
+      "id": "q05",
+      "wording": "casual",
+      "goldArticles": [
+        "Art. 336c"
+      ],
+      "ranks": {
+        "vector": 9,
+        "keyword": null,
+        "hybrid": null
+      }
+    },
+    {
+      "id": "q06",
+      "wording": "legal",
+      "goldArticles": [
+        "Art. 336c"
+      ],
+      "ranks": {
+        "vector": 4,
+        "keyword": 3,
+        "hybrid": 4
+      }
+    },
+    {
+      "id": "q07",
+      "wording": "legal",
+      "goldArticles": [
+        "Art. 321c"
+      ],
+      "ranks": {
+        "vector": 1,
+        "keyword": 1,
+        "hybrid": 1
+      }
+    },
+    {
+      "id": "q08",
+      "wording": "casual",
+      "goldArticles": [
+        "Art. 330a"
+      ],
+      "ranks": {
+        "vector": 4,
+        "keyword": null,
+        "hybrid": null
+      }
+    },
+    {
+      "id": "q09",
+      "wording": "legal",
+      "goldArticles": [
+        "Art. 330a"
+      ],
+      "ranks": {
+        "vector": 1,
+        "keyword": 1,
+        "hybrid": 1
+      }
+    },
+    {
+      "id": "q10",
+      "wording": "legal",
+      "goldArticles": [
+        "Art. 335b"
+      ],
+      "ranks": {
+        "vector": 1,
+        "keyword": 1,
+        "hybrid": 1
+      }
+    },
+    {
+      "id": "q11",
+      "wording": "casual",
+      "goldArticles": [
+        "Art. 335b"
+      ],
+      "ranks": {
+        "vector": 2,
+        "keyword": null,
+        "hybrid": 5
+      }
+    },
+    {
+      "id": "q12",
+      "wording": "casual",
+      "goldArticles": [
+        "Art. 324a"
+      ],
+      "ranks": {
+        "vector": 2,
+        "keyword": null,
+        "hybrid": 7
+      }
+    },
+    {
+      "id": "q13",
+      "wording": "legal",
+      "goldArticles": [
+        "Art. 329f"
+      ],
+      "ranks": {
+        "vector": 1,
+        "keyword": 1,
+        "hybrid": 1
+      }
+    },
+    {
+      "id": "q14",
+      "wording": "casual",
+      "goldArticles": [
+        "Art. 329g"
+      ],
+      "ranks": {
+        "vector": 1,
+        "keyword": 8,
+        "hybrid": 3
+      }
+    },
+    {
+      "id": "q15",
+      "wording": "casual",
+      "goldArticles": [
+        "Art. 327a"
+      ],
+      "ranks": {
+        "vector": 1,
+        "keyword": 10,
+        "hybrid": 2
+      }
+    },
+    {
+      "id": "q16",
+      "wording": "casual",
+      "goldArticles": [
+        "Art. 329c"
+      ],
+      "ranks": {
+        "vector": 3,
+        "keyword": 4,
+        "hybrid": 2
+      }
+    },
+    {
+      "id": "q17",
+      "wording": "legal",
+      "goldArticles": [
+        "Art. 329d"
+      ],
+      "ranks": {
+        "vector": 1,
+        "keyword": 1,
+        "hybrid": 1
+      }
+    },
+    {
+      "id": "q18",
+      "wording": "casual",
+      "goldArticles": [
+        "Art. 332"
+      ],
+      "ranks": {
+        "vector": 1,
+        "keyword": 1,
+        "hybrid": 1
+      }
+    },
+    {
+      "id": "q19",
+      "wording": "legal",
+      "goldArticles": [
+        "Art. 333"
+      ],
+      "ranks": {
+        "vector": 1,
+        "keyword": 1,
+        "hybrid": 1
+      }
+    },
+    {
+      "id": "q20",
+      "wording": "legal",
+      "goldArticles": [
+        "Art. 336"
+      ],
+      "ranks": {
+        "vector": 3,
+        "keyword": 1,
+        "hybrid": 2
+      }
+    },
+    {
+      "id": "q21",
+      "wording": "legal",
+      "goldArticles": [
+        "Art. 336a"
+      ],
+      "ranks": {
+        "vector": 1,
+        "keyword": 1,
+        "hybrid": 1
+      }
+    },
+    {
+      "id": "q22",
+      "wording": "casual",
+      "goldArticles": [
+        "Art. 337c"
+      ],
+      "ranks": {
+        "vector": 1,
+        "keyword": null,
+        "hybrid": 2
+      }
+    },
+    {
+      "id": "q23",
+      "wording": "legal",
+      "goldArticles": [
+        "Art. 337"
+      ],
+      "ranks": {
+        "vector": 1,
+        "keyword": 1,
+        "hybrid": 1
+      }
+    },
+    {
+      "id": "q24",
+      "wording": "legal",
+      "goldArticles": [
+        "Art. 340"
+      ],
+      "ranks": {
+        "vector": 1,
+        "keyword": 1,
+        "hybrid": 1
+      }
+    },
+    {
+      "id": "q25",
+      "wording": "casual",
+      "goldArticles": [
+        "Art. 340a"
+      ],
+      "ranks": {
+        "vector": 2,
+        "keyword": null,
+        "hybrid": 6
+      }
+    },
+    {
+      "id": "q26",
+      "wording": "casual",
+      "goldArticles": [
+        "Art. 339b",
+        "Art. 339c"
+      ],
+      "ranks": {
+        "vector": 1,
+        "keyword": null,
+        "hybrid": 1
+      }
+    },
+    {
+      "id": "q27",
+      "wording": "legal",
+      "goldArticles": [
+        "Art. 330b"
+      ],
+      "ranks": {
+        "vector": 1,
+        "keyword": 1,
+        "hybrid": 1
+      }
+    },
+    {
+      "id": "q28",
+      "wording": "casual",
+      "goldArticles": [
+        "Art. 321e"
+      ],
+      "ranks": {
+        "vector": 3,
+        "keyword": null,
+        "hybrid": null
+      }
+    },
+    {
+      "id": "q29",
+      "wording": "casual",
+      "goldArticles": [
+        "Art. 329h"
+      ],
+      "ranks": {
+        "vector": 1,
+        "keyword": 3,
+        "hybrid": 1
+      }
+    },
+    {
+      "id": "q30",
+      "wording": "legal",
+      "goldArticles": [
+        "Art. 328"
+      ],
+      "ranks": {
+        "vector": 1,
+        "keyword": 1,
+        "hybrid": 1
+      }
+    }
+  ]
+}

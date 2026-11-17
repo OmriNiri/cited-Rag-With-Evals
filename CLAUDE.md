@@ -62,6 +62,7 @@ npm run corpus:build        # re-generate corpus/ from the pinned fedlex source
 npm run ingest              # build, then chunk + embed corpus/ into the chunks table (idempotent)
 npm run search -- "<question>" --mode all   # compare vector / keyword / hybrid top-k (--k, --document)
 npm run ask -- "<question>"     # full pipeline: retrieval -> model -> citation check -> answer or refusal
+npm run eval:retrieval      # hit@k + MRR per retriever on eval/questions.jsonl -> eval/results/retrieval.{json,md} (no LLM)
 ```
 
 Update this list whenever a script is added.
